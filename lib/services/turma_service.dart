@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
-import '../models/atividade/Atividade.dart';
+import '../models/turma/Turma.dart';
 import 'session_manager.dart';
 
 class TurmaService {
@@ -23,14 +23,14 @@ class TurmaService {
   }
 
   /// 1. LISTAR (READ)
-  Future<List<Atividade>> getAtividades() async {
+  Future<List<Turma>> getTurmas() async {
     final response = await _dio.get("/turma");
     // response.data já é uma lista, não precisa de json.decode
-    return (response.data as List).map((data) => Atividade.fromJson(data)).toList();
+    return (response.data as List).map((data) => Turma.fromJson(data)).toList();
   }
 
   // 2. CRIAR (CREATE)
-  Future<bool> criarAtividade(Atividade turma) async {
+  Future<bool> criarTurma(Turma turma) async {
     // Note: Não precisa mais buscar o token aqui, o Interceptor faz isso!
     // E não precisa de jsonEncode, o Dio aceita o .toJson() direto
     final response = await _dio.post("/turma", data: turma.toJson());
@@ -38,14 +38,31 @@ class TurmaService {
   }
 
   // 3. EDITAR (UPDATE)
-  Future<bool> salvarAtividade(Atividade turma) async {
+  Future<bool> salvarTurma(Turma turma) async {
     final response = await _dio.put("/turma", data: turma.toJson());
     return response.statusCode == 200;
   }
 
   // 4. EXCLUIR (DELETE)
-  Future<bool> excluirAtividade(int id) async {
+  Future<bool> excluirTurma(int id) async {
     final response = await _dio.delete("/turma/$id");
     return response.statusCode == 204 || response.statusCode == 200;
+  }
+
+  Future<List<Turma>> carregarTurmasDashboard() async {
+    final session = await SessionManager.getSession();
+    final perfil = session?.perfil;
+    final id = session?.id;
+    print("$id");
+
+    // Se for aluno ou bolsista, buscamos apenas o que lhe pertence
+    if (perfil == "BOLSISTA" || perfil == "MONITOR") {
+      final response = await _dio.get("/turma/minhas-turmas/$id");
+      return (response.data as List).map((i) => Turma.fromJson(i)).toList();
+    } else {
+      // Coordenador vê tudo
+      final response = await _dio.get("/turma");
+      return (response.data as List).map((i) => Turma.fromJson(i)).toList();
+    }
   }
 }

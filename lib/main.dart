@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:prosaude/services/session_manager.dart'; // Importe seu SessionManager
-import 'package:prosaude/screens/home_screen.dart';     // Tela de Login/Home
-import 'package:prosaude/screens/dashboard_screen.dart'; // Tela de destino após login
+import 'package:prosaude/screens/Home_screen.dart';     // Tela de Login/Home
+import 'package:prosaude/screens/Dashboard_screen.dart'; // Tela de destino após login
 
 void main() async {
   // 1. Garante que os plugins do Flutter (como SharedPreferences) iniciem corretamente

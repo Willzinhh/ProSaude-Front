@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:prosaude/models/login/LoginResponse.dart';
-import 'package:prosaude/screens/dashboard_screen.dart';
+import 'package:prosaude/screens/Dashboard_screen.dart';
 import 'package:prosaude/services/auth_service.dart';
 import 'package:prosaude/services/session_manager.dart';
 

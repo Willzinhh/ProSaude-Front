@@ -1,28 +1,30 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:prosaude/models/usuario/Usuario.dart';
 
-part 'Atividade.g.dart';
+part 'Turma.g.dart';
 
 @JsonSerializable(explicitToJson: true)
-class Atividade {
+class Turma {
   final int? id;
-  final String codigo;
   final String nome;
   final String descricao;
   final Usuario? bolsistaResponsavel;
-  final Usuario? monitor;
+  final String horaInicio;
+  final String horaFim;
+  final List<String>? diasSemana; // Vem como lista de Strings do JSON
 
-  Atividade({
+  Turma({
     this.id,
-    required this.codigo,
     required this.nome,
     required this.descricao,
     this.bolsistaResponsavel,
-    this.monitor,
+    required this.horaInicio,
+    required this.horaFim,
+    this.diasSemana
   });
 
-  factory Atividade.fromJson(Map<String, dynamic> json) => _$AtividadeFromJson(json);
+  factory Turma.fromJson(Map<String, dynamic> json) => _$TurmaFromJson(json);
 
   // MUDANÇA AQUI: Conecta com o código que será gerado
-  Map<String, dynamic> toJson() => _$AtividadeToJson(this);
+  Map<String, dynamic> toJson() => _$TurmaToJson(this);
 }
