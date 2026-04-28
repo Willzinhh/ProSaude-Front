@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart' as slider;
+import 'package:prosaude/screens/FormularioInscricao_screen.dart';
 import 'package:prosaude/screens/Login_screen.dart';
 import '../models/turma/Turma.dart';
 import '../services/turma_service.dart';
@@ -33,33 +34,11 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Wrap(
-                    spacing: 6, // Espaço horizontal entre os dias
-                    children: turma.diasSemana!.map((dia) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.teal.shade700.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          dia.substring(0, 3),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const Spacer(),
-                  Container(
+              Wrap(
+                spacing: 6, // Espaço horizontal entre os dias
+                runSpacing: 6,
+                children: turma.diasSemana!.map((dia) {
+                  return Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
                       vertical: 2,
@@ -69,11 +48,26 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      "${formatarHora(turma.horaInicio)} -- ${formatarHora(turma.horaFim)}",
-                      style: TextStyle(
+                      dia.substring(0, 3),
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 15),
+
+              Row(
+                children: [
+                  const Icon(Icons.access_time, size: 18, color: Colors.teal),
+                  const SizedBox(width: 8),
+                  Text(
+                    "${formatarHora(turma.horaInicio)} até ${formatarHora(turma.horaFim)}",
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -90,7 +84,14 @@ class _HomePageState extends State<HomePage> {
         ),
 
         actions: [
-          ElevatedButton(onPressed: () {}, child: const Text("Inscrever-se")),
+          ElevatedButton(
+            onPressed: () {
+              final int? idSelecionado = turma.id;
+              _verificarUsuario(context, turma.id); // Chama o diálogo aqui
+              child: const Text("INSCREVER-SE");
+            },
+            child: const Text("Inscrever-se"),
+          ),
         ],
       ),
     );
@@ -122,7 +123,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "NEMAEFS",
+          "PróSaude",
           style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
@@ -349,39 +350,32 @@ class _HomePageState extends State<HomePage> {
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Icon(Icons.fitness_center, color: Colors.teal.shade300, size: 28),
-                  // const Spacer(),
-                  Wrap(
-                    spacing: 6, // Espaço horizontal entre os dias
-                    children: turma.diasSemana!.map((dia) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.teal.shade300.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          dia.substring(0, 3),
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
+              Wrap(
+                spacing: 6, // Espaço horizontal entre os dias
+                children: turma.diasSemana!.map((dia) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.teal.shade300.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      dia.substring(0, 3),
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
-              const SizedBox(height: 20),
+              const Spacer(),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Text(
@@ -395,7 +389,7 @@ class _HomePageState extends State<HomePage> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(height: 20),
+              const Spacer(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -446,10 +440,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 15),
           const Text(
             "Sem atividades hoje",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 5),
           Text(
@@ -461,6 +452,47 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    );
+  }
+
+  void _verificarUsuario(BuildContext context, int? turmaId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Já possui cadastro?"),
+          content: const Text(
+              "Para continuar com a inscrição, precisamos saber se você já é aluno do Pró-Saúde."
+          ),
+          actions: [
+            // OPÇÃO 1: NÃO TEM CONTA
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Fecha o diálogo
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FormularioInscricaoScreen(turmaId: turmaId),
+                  ),
+                );
+              },
+              child: const Text("NÃO TENHO CONTA"),
+            ),
+
+            // OPÇÃO 2: JÁ TEM CONTA
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Fecha o diálogo
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              },
+              child: const Text("JÁ TENHO CONTA"),
+            ),
+          ],
+        );
+      },
     );
   }
 }

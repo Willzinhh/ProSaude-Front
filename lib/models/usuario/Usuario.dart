@@ -4,16 +4,19 @@ part 'Usuario.g.dart';
 
 @JsonSerializable()
 class Usuario {
-  final int id;
+  final int? id;
   final String nome;
   final String email;
+  final String senha;
   final String perfil;
   final DadosAluno? dados; // O gerador vai entender que isso é outro objeto
 
+
   Usuario({
-    required this.id,
+    this.id,
     required this.nome,
     required this.email,
+    required this.senha,
     required this.perfil,
     this.dados,
   });

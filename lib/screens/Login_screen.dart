@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:prosaude/models/login/LoginResponse.dart';
 import 'package:prosaude/screens/Dashboard_screen.dart';
+import 'package:prosaude/screens/TrocarSenha_screen.dart';
 import 'package:prosaude/services/auth_service.dart';
 import 'package:prosaude/services/session_manager.dart';
 
@@ -27,6 +29,8 @@ class _LoginScreenState extends State<LoginScreen> {
 // import '../services/api_service.dart';
 
   void _handleLogin() async {
+    int? uid;
+
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true); // Opcional: mostrar um loading
 
@@ -42,16 +46,32 @@ class _LoginScreenState extends State<LoginScreen> {
           // Em vez de passar token, nome e perfil separados, passamos o objeto 'resultado' todo
           await SessionManager.saveSession(resultado);
 
+          final sessao = await SessionManager.getSession();
+          if (sessao != null) {
+            setState(() {
+              uid = sessao.id;
+            });
+          }
+
           print("Sessão salva para o usuário: ${resultado.nome}");
 
           if (!mounted) return; // Boa prática para evitar erros de contexto no Navigator
 
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const DashboardScreen(),
-            ),
-          );
+          if (resultado.primeiroAcesso == true) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TrocarSenhaScreen(usuarioId: uid!),
+              ),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const DashboardScreen(),
+              ),
+            );
+          }
         }
       } catch (e) {
         if (!mounted) return;

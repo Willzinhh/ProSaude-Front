@@ -11,7 +11,8 @@ LoginResponse _$LoginResponseFromJson(Map<String, dynamic> json) =>
       token: json['token'] as String?,
       nome: json['nome'] as String?,
       perfil: json['perfil'] as String?,
-      id: json['id'] as int? ,
+      id: (json['id'] as num?)?.toInt(),
+      primeiroAcesso: json['primeiroAcesso'] as bool?,
     );
 
 Map<String, dynamic> _$LoginResponseToJson(LoginResponse instance) =>
@@ -20,4 +21,5 @@ Map<String, dynamic> _$LoginResponseToJson(LoginResponse instance) =>
       'nome': instance.nome,
       'perfil': instance.perfil,
       'id': instance.id,
+      'primeiroAcesso': instance.primeiroAcesso,
     };

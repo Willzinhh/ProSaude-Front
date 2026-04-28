@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:prosaude/models/turma/Turma.dart';
 import 'package:prosaude/screens/EquipeManageScreen.dart';
 import 'package:prosaude/screens/TrumaManage_screen.dart';
+import 'package:prosaude/screens/lista_inscritos_screen.dart';
 import 'package:prosaude/services/session_manager.dart';
 import 'package:prosaude/services/turma_service.dart';
 
@@ -206,53 +207,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // Widget para os cards de Turma que ocupam a largura total (Full Width)
   Widget _buildWideTurmaCard(BuildContext context, Turma turma) {
-    return Container(
-      width: double.infinity, // Ocupa toda a largura
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ListaInscritosScreen(
+                turmaId: turma.id!,
+                nomeTurma: turma.nome
+            ),
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: IntrinsicHeight(
-          child: Row(
+        );
+      },
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 15),
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Barra lateral colorida para dar um destaque visual
-              Container(width: 8, color: Colors.teal.shade400),
-
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.teal.withOpacity(0.1),
-                        child: const Icon(Icons.fitness_center, color: Colors.teal),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(turma.nome,
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 4),
-                          ],
-                        ),
-                      ),
-                      const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                    ],
-                  ),
-                ),
-              ),
+              Text(turma.nome, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text("Horário: ${turma.diasSemana}"),
+              const SizedBox(height: 10),
+              const Text("Clique para ver a lista de inscritos",
+                  style: TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
