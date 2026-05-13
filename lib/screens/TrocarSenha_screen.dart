@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:prosaude/services/equipe_service.dart'; // Supondo que o método esteja aqui
+import 'package:prosaude/core/services/equipe_service.dart'; // Supondo que o método esteja aqui
 
 class TrocarSenhaScreen extends StatefulWidget {
   final int usuarioId;

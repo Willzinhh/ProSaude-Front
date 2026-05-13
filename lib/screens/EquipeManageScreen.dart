@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/usuario/Usuario.dart';
-import '../services/equipe_service.dart';
+import '../core/models/usuario/Usuario.dart';
+import '../core/services/equipe_service.dart';
 
 class EquipeManageScreen extends StatefulWidget {
   const EquipeManageScreen({super.key});

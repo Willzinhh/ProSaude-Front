@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart' as slider;
 import 'package:prosaude/screens/FormularioInscricao_screen.dart';
 import 'package:prosaude/screens/Login_screen.dart';
-import '../models/turma/Turma.dart';
-import '../services/turma_service.dart';
+import '../core/models/turma/Turma.dart';
+import '../core/services/session_manager.dart';
+import '../core/services/turma_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,10 +19,37 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _verificarSessaoAtiva();
     _futureTurmas = TurmaService().getTurmas();
   }
 
+  Future<void> _verificarSessaoAtiva() async {
+    // 1. Busca o token no seu SessionManager
+    final token = await SessionManager.getToken();
+
+    // 2. Se o token existir e não estiver vazio, ele pula o login
+    if (token != null && token.isNotEmpty) {
+      // Usamos o Microtask ou um pequeno delay para garantir que o contexto esteja pronto
+      Future.microtask(() {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      });
+    }
+  }
+
+  List<String> diasAtivos(turma){
+    final diasAtivos = <String>[];
+  if (turma.aulaSegunda == true) diasAtivos.add("SEG");
+  if (turma.aulaTerca == true) diasAtivos.add("TER");
+  if (turma.aulaQuarta == true) diasAtivos.add("QUA");
+  if (turma.aulaQuinta == true) diasAtivos.add("QUI");
+  if (turma.aulaSexta == true) diasAtivos.add("SEX");
+  if (turma.aulaSabado == true) diasAtivos.add("SÁB");
+  if (turma.aulaDomingo == true) diasAtivos.add("DOM");
+    return diasAtivos;
+  }
+
   void _abrirModalDetalhes(Turma turma) {
+    final diasAtivo= diasAtivos(turma);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -37,7 +65,7 @@ class _HomePageState extends State<HomePage> {
               Wrap(
                 spacing: 6, // Espaço horizontal entre os dias
                 runSpacing: 6,
-                children: turma.diasSemana!.map((dia) {
+                children: diasAtivo.map((dia) {
                   return Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -76,7 +104,7 @@ class _HomePageState extends State<HomePage> {
               Text(turma.descricao),
               const Divider(),
               Text(
-                "Bolsista Encaregado: ${turma.bolsistaResponsavel?.nome.toUpperCase() ?? 'Não informado'}",
+                "Bolsista Encaregado: ${turma.bolsista_responsavel?.nome.toUpperCase() ?? 'Não informado'}",
                 style: const TextStyle(fontSize: 12),
               ),
             ],
@@ -85,10 +113,22 @@ class _HomePageState extends State<HomePage> {
 
         actions: [
           ElevatedButton(
-            onPressed: () {
-              final int? idSelecionado = turma.id;
-              _verificarUsuario(context, turma.id); // Chama o diálogo aqui
-              child: const Text("INSCREVER-SE");
+            onPressed: () async {
+              final token = await SessionManager.getToken();
+              Navigator.pop(context); // Fecha o modal de detalhes
+
+              if (token != null && token.isNotEmpty) {
+                // USUÁRIO LOGADO: Vai direto para o formulário (ou lógica de inscrição direta)
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => FormularioInscricaoScreen(turmaId: turma.id)
+                    )
+                );
+              } else {
+                // USUÁRIO ANÔNIMO: Pergunta se já tem conta
+                _verificarUsuario(context, turma.id);
+              }
             },
             child: const Text("Inscrever-se"),
           ),
@@ -112,10 +152,30 @@ class _HomePageState extends State<HomePage> {
       7: "DOMINGO",
     };
 
+
+
     String hoje = mapaDias[diaNum] ?? "";
 
     // Filtra as turmas que CONTÉM o dia de hoje na lista delas
-    return todas.where((t) => t.diasSemana?.contains(hoje) ?? false).toList();
+    return todas.where((t){ switch (hoje) {
+    case "SEGUNDA":
+    return t.aulaSegunda;
+    case "TERCA":
+    return t.aulaTerca;
+    case "QUARTA":
+    return t.aulaQuarta;
+    case "QUINTA":
+    return t.aulaQuinta;
+    case "SEXTA":
+    return t.aulaSexta;
+    case "SABADO":
+    return t.aulaSabado;
+    case "DOMINGO":
+    return t.aulaDomingo;
+    default:
+    return false; // Se não reconhecer o dia, não mostra a turma
+    }
+        }).toList();
   }
 
   @override
@@ -134,13 +194,19 @@ class _HomePageState extends State<HomePage> {
               backgroundColor: Colors.teal.shade100,
               child: IconButton(
                 icon: const Icon(Icons.person, color: Colors.teal),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
-                    ),
-                  );
+                onPressed: () async {
+                  final token = await SessionManager.getToken();
+
+                  if (token != null && token.isNotEmpty) {
+                    // Se logado, vai direto para o Dashboard
+                    Navigator.pushNamed(context, '/dashboard');
+                  } else {
+                    // Se não, vai para a tela de login
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    );
+                  }
                 },
               ),
             ),
@@ -250,8 +316,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
+
   // Widget para o item individual do Carrossel
   Widget _buildCarouselItem(Turma turma) {
+    final diasAtivo= diasAtivos(turma);
+
     if (turma == null) {}
     return InkWell(
       onTap: () => _abrirModalDetalhes(turma),
@@ -285,7 +355,7 @@ class _HomePageState extends State<HomePage> {
                   const Spacer(),
                   Wrap(
                     spacing: 6, // Espaço horizontal entre os dias
-                    children: turma.diasSemana!.map((dia) {
+                    children: diasAtivo.map((dia) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -341,6 +411,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCardTurma(Turma turma) {
+    final diasAtivos = <String>[];
+    if (turma.aulaSegunda == true) diasAtivos.add("SEG");
+    if (turma.aulaTerca == true) diasAtivos.add("TER");
+    if (turma.aulaQuarta == true) diasAtivos.add("QUA");
+    if (turma.aulaQuinta == true) diasAtivos.add("QUI");
+    if (turma.aulaSexta == true) diasAtivos.add("SEX");
+    if (turma.aulaSabado == true) diasAtivos.add("SÁB");
+    if (turma.aulaDomingo == true) diasAtivos.add("DOM");
     return InkWell(
       onTap: () => _abrirModalDetalhes(turma),
       borderRadius: BorderRadius.circular(15),
@@ -354,7 +432,7 @@ class _HomePageState extends State<HomePage> {
             children: [
               Wrap(
                 spacing: 6, // Espaço horizontal entre os dias
-                children: turma.diasSemana!.map((dia) {
+                children: diasAtivos.map((dia) {
                   return Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,

@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
-import 'package:prosaude/models/login/LoginResponse.dart';
+import 'package:prosaude/core/models/login/LoginResponse.dart';
 import 'package:prosaude/screens/Dashboard_screen.dart';
 import 'package:prosaude/screens/TrocarSenha_screen.dart';
-import 'package:prosaude/services/auth_service.dart';
-import 'package:prosaude/services/session_manager.dart';
+import 'package:prosaude/core/services/auth_service.dart';
+import 'package:prosaude/core/services/session_manager.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

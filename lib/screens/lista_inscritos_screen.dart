@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:prosaude/models/aluno/Aluno.dart';
-import 'package:prosaude/services/inscricao_service.dart';
+import 'package:prosaude/core/models/aluno/Aluno.dart';
+import 'package:prosaude/core/services/inscricao_service.dart';
 
 class ListaInscritosScreen extends StatelessWidget {
   final int turmaId;
@@ -34,7 +34,7 @@ class ListaInscritosScreen extends StatelessWidget {
                   child: Text("${index + 1}", style: const TextStyle(color: Colors.white)),
                 ),
                 title: Text(aluno.nome, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text("CPF: ${aluno.cpf}\nTel: ${aluno.telefone}"),
+                subtitle: Text("Tel: ${aluno.telefone}\n Emergency: ${aluno.telefoneEmergencia}"),
                 isThreeLine: true,
                 // trailing: IconButton(
                 //   icon: const Icon( color: Colors.green),

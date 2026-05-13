@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:prosaude/services/inscricao_service.dart';
+import 'package:prosaude/core/services/inscricao_service.dart';
 
 class FormularioInscricaoScreen extends StatefulWidget {
   final int? turmaId; // Para saber em qual turma ele quer entrar após se cadastrar

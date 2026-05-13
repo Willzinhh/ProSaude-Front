@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:prosaude/models/turma/Turma.dart';
-import 'package:prosaude/models/usuario/Usuario.dart';
-import 'package:prosaude/services/equipe_service.dart';
-import 'package:prosaude/services/turma_service.dart';
+import 'package:prosaude/core/models/turma/Turma.dart';
+import 'package:prosaude/core/models/usuario/Usuario.dart';
+import 'package:prosaude/core/services/equipe_service.dart';
+import 'package:prosaude/core/services/turma_service.dart';
 
 class TurmaManageScreen extends StatefulWidget {
   const TurmaManageScreen({super.key});
@@ -180,10 +180,17 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
 
     if (item != null && item.id != null) {
 
-      _idBolsistaSelecionado = item.bolsistaResponsavel?.id;
-      _diasSelecionados = List.from(
-        item.diasSemana ?? [],
-      ); // Copia a lista para evitar bugs
+      _idBolsistaSelecionado = item.bolsista_responsavel?.id;
+      _diasSelecionados = [];
+
+      if (item.aulaSegunda == true) _diasSelecionados.add("SEGUNDA");
+      if (item.aulaTerca == true) _diasSelecionados.add("TERCA");
+      if (item.aulaQuarta == true) _diasSelecionados.add("QUARTA");
+      if (item.aulaQuinta == true) _diasSelecionados.add("QUINTA");
+      if (item.aulaSexta == true) _diasSelecionados.add("SEXTA");
+      if (item.aulaSabado == true) _diasSelecionados.add("SABADO");
+      if (item.aulaDomingo == true) _diasSelecionados.add("DOMINGO");
+       // Copia a lista para evitar bugs
 
       // Converte String "HH:mm:ss" para TimeOfDay
       if (item.horaInicio.isNotEmpty) {
@@ -431,10 +438,16 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                               id: item?.id,
                               nome: nomeController.text,
                               descricao: descricaoController.text,
-                              bolsistaResponsavel: bolsistaEscolhido,
+                              bolsista_responsavel: bolsistaEscolhido,
                               horaInicio: formatTime(_horaInicio!),
                               horaFim: formatTime(_horaFim!),
-                              diasSemana: _diasSelecionados,
+                              aulaSegunda: _diasSelecionados.contains("SEGUNDA"),
+                              aulaTerca: _diasSelecionados.contains("TERCA"),
+                              aulaQuarta: _diasSelecionados.contains("QUARTA"),
+                              aulaQuinta: _diasSelecionados.contains("QUINTA"),
+                              aulaSexta: _diasSelecionados.contains("SEXTA"),
+                              aulaSabado: _diasSelecionados.contains("SABADO"),
+                              aulaDomingo: _diasSelecionados.contains("DOMINGO"),
                             );
 
                             // 1. Chama o serviço e espera terminar (await)
