@@ -1,12 +1,8 @@
-import 'dart:convert';
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
-import 'package:prosaude/core/models/login/LoginResponse.dart';
-import 'package:prosaude/screens/Dashboard_screen.dart';
-import 'package:prosaude/screens/TrocarSenha_screen.dart';
 import 'package:prosaude/core/services/auth_service.dart';
 import 'package:prosaude/core/services/session_manager.dart';
+import 'package:prosaude/screens/Dashboard_screen.dart';
+import 'package:prosaude/screens/TrocarSenha_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,7 +11,6 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -23,10 +18,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isObscure = true;
   bool _isLoading = false;
 
-
-
   // No topo do arquivo:
-// import '../services/api_service.dart';
+  // import '../services/api_service.dart';
 
   void _handleLogin() async {
     int? uid;
@@ -37,8 +30,8 @@ class _LoginScreenState extends State<LoginScreen> {
       try {
         final api = AuthService();
         final resultado = await api.realizarLogin(
-            _emailController.text,
-            _passwordController.text
+          _emailController.text,
+          _passwordController.text,
         );
 
         if (resultado != null) {
@@ -55,7 +48,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
           print("Sessão salva para o usuário: ${resultado.nome}");
 
-          if (!mounted) return; // Boa prática para evitar erros de contexto no Navigator
+          if (!mounted)
+            return; // Boa prática para evitar erros de contexto no Navigator
 
           if (resultado.primeiroAcesso == true) {
             Navigator.pushReplacement(
@@ -67,9 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
           } else {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(
-                builder: (context) => const DashboardScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const DashboardScreen()),
             );
           }
         }
@@ -97,7 +89,11 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.health_and_safety, size: 80, color: Colors.teal),
+                const Icon(
+                  Icons.health_and_safety,
+                  size: 80,
+                  color: Colors.teal,
+                ),
                 const SizedBox(height: 20),
                 const Text(
                   "Bem-vindo ao Pro Saúde",
@@ -115,7 +111,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     prefixIcon: Icon(Icons.person),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return "Informe o usuário";
+                    if (value == null || value.isEmpty)
+                      return "Informe o usuário";
                     return null;
                   },
                 ),
@@ -130,12 +127,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
-                      icon: Icon(_isObscure ? Icons.visibility : Icons.visibility_off),
+                      icon: Icon(
+                        _isObscure ? Icons.visibility : Icons.visibility_off,
+                      ),
                       onPressed: () => setState(() => _isObscure = !_isObscure),
                     ),
                   ),
                   validator: (value) {
-                    if (value == null ) return "Senha muito curta";
+                    if (value == null) return "Senha muito curta";
                     return null;
                   },
                 ),
@@ -146,12 +145,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _handleLogin, // Desativa o botão enquanto carrega
+                    onPressed: _isLoading ? null : _handleLogin,
+                    // Desativa o botão enquanto carrega
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text("ENTRAR"),
                   ),
-
                 ),
 
                 TextButton(
@@ -166,4 +165,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-

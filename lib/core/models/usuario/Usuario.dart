@@ -15,7 +15,6 @@ class Usuario {
   final String? observacaoMedica;
   final String? data_nascimento;
 
-
   Usuario({
     this.id,
     required this.nome,
@@ -26,10 +25,11 @@ class Usuario {
     this.telefone_emergencia,
     this.cpf,
     this.observacaoMedica,
-    this.data_nascimento
+    this.data_nascimento,
   });
 
-  factory Usuario.fromJson(Map<String, dynamic> json) => _$UsuarioFromJson(json);
-  Map<String, dynamic> toJson() => _$UsuarioToJson(this);
+  factory Usuario.fromJson(Map<String, dynamic> json) =>
+      _$UsuarioFromJson(json);
 
+  Map<String, dynamic> toJson() => _$UsuarioToJson(this);
 }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:prosaude/core/models/turma/Turma.dart';
+import 'package:prosaude/core/services/session_manager.dart';
+import 'package:prosaude/core/services/turma_service.dart';
 import 'package:prosaude/screens/EquipeManageScreen.dart';
 import 'package:prosaude/screens/TrumaManage_screen.dart';
 import 'package:prosaude/screens/lista_inscritos_screen.dart';
-import 'package:prosaude/core/services/session_manager.dart';
-import 'package:prosaude/core/services/turma_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -152,17 +152,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onTap: () {
                     print("e");
                   },
-                  // () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ())),
 
+                  // () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ())),
                 ),
-                  _buildActionCard(
+                _buildActionCard(
                   context,
                   icon: Icons.assignment,
                   label: "Avaliaçoes",
                   color: Colors.blue.shade700,
                   onTap: () {
-                  print("e");
-                  },)
+                    print("e");
+                  },
+                ),
               ]),
             ],
             // --- SEÇÃO DE TURMAS (CARDS LARGOS - FULL WIDTH) ---

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../core/models/usuario/Usuario.dart';
 import '../core/services/equipe_service.dart';
 
@@ -29,7 +30,9 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erro: $e")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Erro: $e")));
     }
   }
 
@@ -40,23 +43,26 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-        itemCount: _equipe.length,
-        itemBuilder: (context, index) {
-          final membro = _equipe[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            child: ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.person)),
-              title: Text("${membro.nome}"),
-              subtitle: Text("${membro.email} • ${membro.perfil}"),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () => _confirmarExclusao(membro),
-              ),
+              itemCount: _equipe.length,
+              itemBuilder: (context, index) {
+                final membro = _equipe[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  child: ListTile(
+                    leading: const CircleAvatar(child: Icon(Icons.person)),
+                    title: Text("${membro.nome}"),
+                    subtitle: Text("${membro.email} • ${membro.perfil}"),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _confirmarExclusao(membro),
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _abrirFormularioUsuario(null),
         child: const Icon(Icons.person_add),
@@ -90,7 +96,9 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
         builder: (context, setModalState) => Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-            left: 24, right: 24, top: 24,
+            left: 24,
+            right: 24,
+            top: 24,
           ),
           child: Form(
             key: _formKey,
@@ -101,22 +109,34 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
                 // Indicador visual de "puxar" o modal
                 Center(
                   child: Container(
-                    width: 40, height: 4,
+                    width: 40,
+                    height: 4,
                     margin: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
 
                 Text(
                   usuario == null ? "Cadastrar Novo Membro" : "Editar Dados",
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.teal),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 if (usuario == null)
                   const Text(
                     "Senha padrão: bolsista123 (O usuário deverá trocar no 1º acesso)",
-                    style: TextStyle(fontSize: 12, color: Colors.orange, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.orange,
+                      fontWeight: FontWeight.w500,
+                    ),
                     textAlign: TextAlign.center,
                   ),
 
@@ -128,9 +148,12 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
                   decoration: InputDecoration(
                     labelText: "Nome Completo",
                     prefixIcon: const Icon(Icons.person_outline),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  validator: (v) => v!.isEmpty ? "Informe o nome completo" : null,
+                  validator: (v) =>
+                      v!.isEmpty ? "Informe o nome completo" : null,
                 ),
                 const SizedBox(height: 18),
 
@@ -141,14 +164,19 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
                   decoration: InputDecoration(
                     labelText: "E-mail de Acesso",
                     prefixIcon: const Icon(Icons.alternate_email),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   validator: (v) => v!.contains("@") ? null : "E-mail inválido",
                 ),
                 const SizedBox(height: 20),
 
                 // SELEÇÃO DE PERFIL (Chips ou Radio)
-                const Text("Nível de Acesso:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const Text(
+                  "Nível de Acesso:",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -156,14 +184,17 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
                       label: "BOLSISTA",
                       icon: Icons.school,
                       isSelected: perfilSelecionado == "BOLSISTA",
-                      onTap: () => setModalState(() => perfilSelecionado = "BOLSISTA"),
+                      onTap: () =>
+                          setModalState(() => perfilSelecionado = "BOLSISTA"),
                     ),
                     const SizedBox(width: 12),
                     _perfilOption(
                       label: "COORDENADOR",
                       icon: Icons.admin_panel_settings,
                       isSelected: perfilSelecionado == "COORDENADOR",
-                      onTap: () => setModalState(() => perfilSelecionado = "COORDENADOR"),
+                      onTap: () => setModalState(
+                        () => perfilSelecionado = "COORDENADOR",
+                      ),
                     ),
                   ],
                 ),
@@ -176,12 +207,13 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
                     backgroundColor: Colors.teal,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     elevation: 2,
                   ),
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-
                       // Criamos o objeto Usuario com a senha padrão se for NOVO
                       Usuario userToSave = Usuario(
                         nome: nomeController.text,
@@ -192,7 +224,9 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
                       );
 
                       // AQUI VOCÊ CHAMA SEU SERVICE
-                      bool sucesso = await EquipeService().salvarMembroEquipe(userToSave);
+                      bool sucesso = await EquipeService().salvarMembroEquipe(
+                        userToSave,
+                      );
 
                       Navigator.pop(context);
 
@@ -200,7 +234,11 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
 
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(usuario == null ? "Membro cadastrado!" : "Dados atualizados!"),
+                          content: Text(
+                            usuario == null
+                                ? "Membro cadastrado!"
+                                : "Dados atualizados!",
+                          ),
                           backgroundColor: Colors.teal,
                         ),
                       );
@@ -208,7 +246,10 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
                   },
                   child: Text(
                     usuario == null ? "CADASTRAR MEMBRO" : "SALVAR ALTERAÇÕES",
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -220,8 +261,13 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
     );
   }
 
-// Widget auxiliar para as opções de perfil ficarem bonitas
-  Widget _perfilOption({required String label, required IconData icon, required bool isSelected, required VoidCallback onTap}) {
+  // Widget auxiliar para as opções de perfil ficarem bonitas
+  Widget _perfilOption({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -229,21 +275,25 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.teal.withOpacity(0.1) : Colors.transparent,
+            color: isSelected
+                ? Colors.teal.withOpacity(0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: isSelected ? Colors.teal : Colors.grey[300]!),
+            border: Border.all(
+              color: isSelected ? Colors.teal : Colors.grey[300]!,
+            ),
           ),
           child: Column(
             children: [
               Icon(icon, color: isSelected ? Colors.teal : Colors.grey),
               const SizedBox(height: 4),
               Text(
-                  label,
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? Colors.teal : Colors.grey[600]
-                  )
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? Colors.teal : Colors.grey[600],
+                ),
               ),
             ],
           ),

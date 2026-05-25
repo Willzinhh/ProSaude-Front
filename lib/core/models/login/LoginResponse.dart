@@ -1,4 +1,3 @@
-
 import 'package:json_annotation/json_annotation.dart';
 
 part 'LoginResponse.g.dart';
@@ -12,9 +11,11 @@ class LoginResponse {
   final bool? primeiroAcesso;
 
 
-  LoginResponse({required this.token, required this.nome, required this.perfil, required this.id, this.primeiroAcesso});
+  LoginResponse(
+      {required this.token, required this.nome, required this.perfil, required this.id, this.primeiroAcesso});
 
-  factory LoginResponse.fromJson(Map<String, dynamic> json) => _$LoginResponseFromJson(json);
+  factory LoginResponse.fromJson(Map<String, dynamic> json) =>
+      _$LoginResponseFromJson(json);
 
 
   Map<String, dynamic> toJson() => _$LoginResponseToJson(this);

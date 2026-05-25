@@ -3,6 +3,7 @@ import 'package:prosaude/core/services/equipe_service.dart'; // Supondo que o m�
 
 class TrocarSenhaScreen extends StatefulWidget {
   final int usuarioId;
+
   const TrocarSenhaScreen({super.key, required this.usuarioId});
 
   @override
@@ -23,8 +24,8 @@ class _TrocarSenhaScreenState extends State<TrocarSenhaScreen> {
         // Ele deve dar um PUT no Java enviando a nova senha e
         // o Java deve mudar o campo primeiroAcesso para false no DB.
         bool sucesso = await EquipeService().atualizarSenhaPrimeiroAcesso(
-            widget.usuarioId,
-            _novaSenhaController.text
+          widget.usuarioId,
+          _novaSenhaController.text,
         );
 
         if (sucesso && mounted) {
@@ -35,7 +36,10 @@ class _TrocarSenhaScreenState extends State<TrocarSenhaScreen> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Erro ao atualizar: $e"), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text("Erro ao atualizar: $e"),
+            backgroundColor: Colors.red,
+          ),
         );
       } finally {
         if (mounted) setState(() => _isLoading = false);
@@ -68,15 +72,23 @@ class _TrocarSenhaScreenState extends State<TrocarSenhaScreen> {
               TextFormField(
                 controller: _novaSenhaController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: "Nova Senha", border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: "Nova Senha",
+                  border: OutlineInputBorder(),
+                ),
                 validator: (v) => v!.length < 6 ? "Mínimo 6 caracteres" : null,
               ),
               const SizedBox(height: 15),
               TextFormField(
                 controller: _confirmarController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: "Confirmar Senha", border: OutlineInputBorder()),
-                validator: (v) => v != _novaSenhaController.text ? "As senhas não coincidem" : null,
+                decoration: const InputDecoration(
+                  labelText: "Confirmar Senha",
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v != _novaSenhaController.text
+                    ? "As senhas não coincidem"
+                    : null,
               ),
               const SizedBox(height: 30),
               SizedBox(
@@ -87,7 +99,10 @@ class _TrocarSenhaScreenState extends State<TrocarSenhaScreen> {
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("ATUALIZAR E ENTRAR", style: TextStyle(color: Colors.white)),
+                      : const Text(
+                          "ATUALIZAR E ENTRAR",
+                          style: TextStyle(color: Colors.white),
+                        ),
                 ),
               ),
             ],

@@ -1,8 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:prosaude/core/models/aluno/Aluno.dart';
 import 'package:prosaude/core/services/inscricao_service.dart';
-
 
 import 'AvaliacaoFormScreen.dart';
 
@@ -40,15 +38,27 @@ class ListaInscritosScreen extends StatelessWidget {
               return ListTile(
                 leading: CircleAvatar(
                   backgroundColor: Colors.blue.shade800,
-                  child: Text("${index + 1}", style: const TextStyle(color: Colors.white)),
+                  child: Text(
+                    "${index + 1}",
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
-                title: Text(aluno.nome, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text("Tel: ${aluno.telefone}\nEmergência: ${aluno.telefoneEmergencia}"),
+                title: Text(
+                  aluno.nome,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  "Tel: ${aluno.telefone}\nEmergência: ${aluno.telefoneEmergencia}",
+                ),
                 isThreeLine: true,
 
                 // Adicionamos o botão de avaliação aqui no canto direito do item
                 trailing: IconButton(
-                  icon: const Icon(Icons.assignment_add, color: Colors.teal, size: 28),
+                  icon: const Icon(
+                    Icons.assignment_add,
+                    color: Colors.teal,
+                    size: 28,
+                  ),
                   tooltip: 'Iniciar Avaliação Física',
                   onPressed: () {
                     // Navega para a tela do formulário de avaliação física

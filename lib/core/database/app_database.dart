@@ -10,7 +10,7 @@ class AppDatabase {
   AppDatabase._internal();
 
   Future<Database> get database async {
-    if(_db != null) return _db!;
+    if (_db != null) return _db!;
     _db = await _initDatabase();
     print('Database opened!');
     return _db!;

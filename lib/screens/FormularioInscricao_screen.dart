@@ -1,13 +1,14 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:prosaude/core/services/inscricao_service.dart';
 
 class FormularioInscricaoScreen extends StatefulWidget {
-  final int? turmaId; // Para saber em qual turma ele quer entrar após se cadastrar
+  final int?
+  turmaId; // Para saber em qual turma ele quer entrar após se cadastrar
   const FormularioInscricaoScreen({required this.turmaId});
 
   @override
-  State<FormularioInscricaoScreen> createState() => _FormularioInscricaoScreenState();
+  State<FormularioInscricaoScreen> createState() =>
+      _FormularioInscricaoScreenState();
 }
 
 class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
@@ -47,7 +48,11 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
               _buildTextField(_emailController, "E-mail", Icons.email),
               _buildTextField(_cpfController, "CPF", Icons.badge),
               _buildTextField(_whatsappController, "WhatsApp", Icons.phone),
-              _buildTextField(_emergenciaController, "Contato de Emergência", Icons.emergency),
+              _buildTextField(
+                _emergenciaController,
+                "Contato de Emergência",
+                Icons.emergency,
+              ),
 
               const SizedBox(height: 10),
               TextFormField(
@@ -67,7 +72,9 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
                 title: Text(_caminhoAtestado ?? "Anexar Atestado Médico"),
                 onTap: _selecionarArquivo,
                 tileColor: Colors.grey[200],
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
 
               const SizedBox(height: 30),
@@ -79,7 +86,7 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
                   onPressed: _finalizarInscricao,
                   child: const Text("CONCLUIR INSCRIÇÃO"),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -97,7 +104,6 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
 
   void _finalizarInscricao() async {
     if (_formKey.currentState!.validate()) {
-
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -121,12 +127,11 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
         // 2. CHAMA O SERVICE (A UI não sabe que existe Dio aqui)
         print("******* ${_nomeController}");
         await _inscricaoService.enviarAutoCadastro(dados);
-      // Agora sim o pop faz sentido: ele fecha o CircularProgressIndicator
+        // Agora sim o pop faz sentido: ele fecha o CircularProgressIndicator
         if (!mounted) return;
         Navigator.pop(context);
 
         _showSucessoDialog();
-
       } catch (e) {
         // Se deu erro, também precisamos fechar o loading antes de mostrar o erro
         if (!mounted) return;
@@ -137,19 +142,20 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
     }
   }
 
-
-
   void _showSucessoDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Sucesso!"),
-        content: const Text("Sua inscrição foi realizada. Use seu CPF para realizar o primeiro login."),
+        content: const Text(
+          "Sua inscrição foi realizada. Use seu CPF para realizar o primeiro login.",
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+            onPressed: () =>
+                Navigator.of(context).popUntil((route) => route.isFirst),
             child: const Text("OK"),
-          )
+          ),
         ],
       ),
     );
@@ -166,7 +172,8 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
           ],
         ),
         backgroundColor: Colors.red.shade700,
-        behavior: SnackBarBehavior.floating, // Faz a snackbar "flutuar" sobre o conteúdo
+        behavior: SnackBarBehavior.floating,
+        // Faz a snackbar "flutuar" sobre o conteúdo
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         duration: const Duration(seconds: 4),
         action: SnackBarAction(
@@ -180,7 +187,11 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: TextFormField(

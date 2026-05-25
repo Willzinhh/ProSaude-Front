@@ -13,7 +13,12 @@ class TurmaManageScreen extends StatefulWidget {
 
 class _TurmaManageScreenState extends State<TurmaManageScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final novaTurma = Turma(nome: 'nome', descricao: 'descrição', horaInicio: '12:30', horaFim: '12:30');
+  final novaTurma = Turma(
+    nome: 'nome',
+    descricao: 'descrição',
+    horaInicio: '12:30',
+    horaFim: '12:30',
+  );
   List<dynamic> _turmas = []; // Lista original da API
   List<dynamic> _turmasFiltradas = []; // Lista que aparece na tela
   bool _isLoading = true;
@@ -159,14 +164,13 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
               },
             ),
           ),
-
         ],
       ),
       // BOTÃO DE CRIAR NOVA
-        floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
         onPressed: () => _abrirFormulario(null),
-          child: const Icon(Icons.add),
-        ),
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
@@ -179,7 +183,6 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
     );
 
     if (item != null && item.id != null) {
-
       _idBolsistaSelecionado = item.bolsista_responsavel?.id;
       _diasSelecionados = [];
 
@@ -190,7 +193,7 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
       if (item.aulaSexta == true) _diasSelecionados.add("SEXTA");
       if (item.aulaSabado == true) _diasSelecionados.add("SABADO");
       if (item.aulaDomingo == true) _diasSelecionados.add("DOMINGO");
-       // Copia a lista para evitar bugs
+      // Copia a lista para evitar bugs
 
       // Converte String "HH:mm:ss" para TimeOfDay
       if (item.horaInicio.isNotEmpty) {
@@ -275,7 +278,10 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                       const SizedBox(height: 15),
                       // --- DROPDOWN BOLSISTAS ---
                       DropdownButtonFormField<int>(
-                        value: _apenasBolsistas.any((b) => b.id == _idBolsistaSelecionado)
+                        value:
+                            _apenasBolsistas.any(
+                              (b) => b.id == _idBolsistaSelecionado,
+                            )
                             ? _idBolsistaSelecionado
                             : null,
                         decoration: const InputDecoration(
@@ -441,13 +447,17 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                               bolsista_responsavel: bolsistaEscolhido,
                               horaInicio: formatTime(_horaInicio!),
                               horaFim: formatTime(_horaFim!),
-                              aulaSegunda: _diasSelecionados.contains("SEGUNDA"),
+                              aulaSegunda: _diasSelecionados.contains(
+                                "SEGUNDA",
+                              ),
                               aulaTerca: _diasSelecionados.contains("TERCA"),
                               aulaQuarta: _diasSelecionados.contains("QUARTA"),
                               aulaQuinta: _diasSelecionados.contains("QUINTA"),
                               aulaSexta: _diasSelecionados.contains("SEXTA"),
                               aulaSabado: _diasSelecionados.contains("SABADO"),
-                              aulaDomingo: _diasSelecionados.contains("DOMINGO"),
+                              aulaDomingo: _diasSelecionados.contains(
+                                "DOMINGO",
+                              ),
                             );
 
                             // 1. Chama o serviço e espera terminar (await)

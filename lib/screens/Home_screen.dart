@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart' as slider;
+import 'package:flutter/material.dart';
 import 'package:prosaude/screens/FormularioInscricao_screen.dart';
 import 'package:prosaude/screens/Login_screen.dart';
+
 import '../core/models/turma/Turma.dart';
 import '../core/services/session_manager.dart';
 import '../core/services/turma_service.dart';
@@ -37,20 +38,20 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  List<String> diasAtivos(turma){
+  List<String> diasAtivos(turma) {
     final diasAtivos = <String>[];
-  if (turma.aulaSegunda == true) diasAtivos.add("SEG");
-  if (turma.aulaTerca == true) diasAtivos.add("TER");
-  if (turma.aulaQuarta == true) diasAtivos.add("QUA");
-  if (turma.aulaQuinta == true) diasAtivos.add("QUI");
-  if (turma.aulaSexta == true) diasAtivos.add("SEX");
-  if (turma.aulaSabado == true) diasAtivos.add("SÁB");
-  if (turma.aulaDomingo == true) diasAtivos.add("DOM");
+    if (turma.aulaSegunda == true) diasAtivos.add("SEG");
+    if (turma.aulaTerca == true) diasAtivos.add("TER");
+    if (turma.aulaQuarta == true) diasAtivos.add("QUA");
+    if (turma.aulaQuinta == true) diasAtivos.add("QUI");
+    if (turma.aulaSexta == true) diasAtivos.add("SEX");
+    if (turma.aulaSabado == true) diasAtivos.add("SÁB");
+    if (turma.aulaDomingo == true) diasAtivos.add("DOM");
     return diasAtivos;
   }
 
   void _abrirModalDetalhes(Turma turma) {
-    final diasAtivo= diasAtivos(turma);
+    final diasAtivo = diasAtivos(turma);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -121,10 +122,11 @@ class _HomePageState extends State<HomePage> {
               if (token != null && token.isNotEmpty) {
                 // USUÁRIO LOGADO: Vai direto para o formulário (ou lógica de inscrição direta)
                 Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => FormularioInscricaoScreen(turmaId: turma.id)
-                    )
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        FormularioInscricaoScreen(turmaId: turma.id),
+                  ),
                 );
               } else {
                 // USUÁRIO ANÔNIMO: Pergunta se já tem conta
@@ -153,30 +155,29 @@ class _HomePageState extends State<HomePage> {
       7: "DOMINGO",
     };
 
-
-
     String hoje = mapaDias[diaNum] ?? "";
 
     // Filtra as turmas que CONTÉM o dia de hoje na lista delas
-    return todas.where((t){ switch (hoje) {
-    case "SEGUNDA":
-    return t.aulaSegunda;
-    case "TERCA":
-    return t.aulaTerca;
-    case "QUARTA":
-    return t.aulaQuarta;
-    case "QUINTA":
-    return t.aulaQuinta;
-    case "SEXTA":
-    return t.aulaSexta;
-    case "SABADO":
-    return t.aulaSabado;
-    case "DOMINGO":
-    return t.aulaDomingo;
-    default:
-    return false; // Se não reconhecer o dia, não mostra a turma
-    }
-        }).toList();
+    return todas.where((t) {
+      switch (hoje) {
+        case "SEGUNDA":
+          return t.aulaSegunda;
+        case "TERCA":
+          return t.aulaTerca;
+        case "QUARTA":
+          return t.aulaQuarta;
+        case "QUINTA":
+          return t.aulaQuinta;
+        case "SEXTA":
+          return t.aulaSexta;
+        case "SABADO":
+          return t.aulaSabado;
+        case "DOMINGO":
+          return t.aulaDomingo;
+        default:
+          return false; // Se não reconhecer o dia, não mostra a turma
+      }
+    }).toList();
   }
 
   @override
@@ -205,7 +206,9 @@ class _HomePageState extends State<HomePage> {
                     // Se não, vai para a tela de login
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
                     );
                   }
                 },
@@ -317,11 +320,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
-
   // Widget para o item individual do Carrossel
   Widget _buildCarouselItem(Turma turma) {
-    final diasAtivo= diasAtivos(turma);
+    final diasAtivo = diasAtivos(turma);
 
     if (turma == null) {}
     return InkWell(
@@ -541,7 +542,7 @@ class _HomePageState extends State<HomePage> {
         return AlertDialog(
           title: const Text("Já possui cadastro?"),
           content: const Text(
-              "Para continuar com a inscrição, precisamos saber se você já é aluno do Pró-Saúde."
+            "Para continuar com a inscrição, precisamos saber se você já é aluno do Pró-Saúde.",
           ),
           actions: [
             // OPÇÃO 1: NÃO TEM CONTA
@@ -551,7 +552,8 @@ class _HomePageState extends State<HomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => FormularioInscricaoScreen(turmaId: turmaId),
+                    builder: (context) =>
+                        FormularioInscricaoScreen(turmaId: turmaId),
                   ),
                 );
               },

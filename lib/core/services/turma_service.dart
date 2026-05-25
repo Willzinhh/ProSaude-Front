@@ -1,25 +1,25 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:http/http.dart' as http;
+
 import '../models/turma/Turma.dart';
 import 'session_manager.dart';
 
 class TurmaService {
-
   // A URL base agora vai até o ProSaude, o resto a gente completa nos métodos
   final Dio _dio = Dio(BaseOptions(baseUrl: "http://10.0.2.2:8081/ProSaude"));
 
   TurmaService() {
     // Configura o "segurança" que coloca o token em todas as chamadas
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await SessionManager.getToken();
-        if (token != null) {
-          options.headers["Authorization"] = "Bearer $token";
-        }
-        return handler.next(options);
-      },
-    ));
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await SessionManager.getToken();
+          if (token != null) {
+            options.headers["Authorization"] = "Bearer $token";
+          }
+          return handler.next(options);
+        },
+      ),
+    );
   }
 
   /// 1. LISTAR (READ)
@@ -62,17 +62,18 @@ class TurmaService {
       final response = await _dio.get("/turma/minhas-turmas/$id");
       return (response.data as List).map((i) => Turma.fromJson(i)).toList();
     }
-    if(perfil == "ALUNO"){
+    if (perfil == "ALUNO") {
       print("entrou");
       final response = await _dio.get("/inscricao/$id/$semestre");
       print("erro aqui");
       return (response.data as List).map((i) => Turma.fromJson(i)).toList();
-    }else {
+    } else {
       // Coordenador vê tudo
       final response = await _dio.get("/turma");
       return (response.data as List).map((i) => Turma.fromJson(i)).toList();
     }
   }
+
   String _gerarSemestreAtual() {
     final agora = DateTime.now();
     final ano = agora.year;
