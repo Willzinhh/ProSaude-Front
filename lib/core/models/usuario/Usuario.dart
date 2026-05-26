@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:json_annotation/json_annotation.dart';
 
 part 'Usuario.g.dart';
@@ -14,6 +16,8 @@ class Usuario {
   final String? cpf;
   final String? observacaoMedica;
   final String? data_nascimento;
+  final bool? primeiroAcesso;
+
 
   Usuario({
     this.id,
@@ -26,6 +30,7 @@ class Usuario {
     this.cpf,
     this.observacaoMedica,
     this.data_nascimento,
+    this.primeiroAcesso
   });
 
   factory Usuario.fromJson(Map<String, dynamic> json) =>

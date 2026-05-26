@@ -17,6 +17,7 @@ Usuario _$UsuarioFromJson(Map<String, dynamic> json) => Usuario(
   cpf: json['cpf'] as String?,
   observacaoMedica: json['observacaoMedica'] as String?,
   data_nascimento: json['data_nascimento'] as String?,
+  primeiroAcesso: json['primeiroAcesso'] as bool?,
 );
 
 Map<String, dynamic> _$UsuarioToJson(Usuario instance) => <String, dynamic>{
@@ -30,4 +31,5 @@ Map<String, dynamic> _$UsuarioToJson(Usuario instance) => <String, dynamic>{
   'cpf': instance.cpf,
   'observacaoMedica': instance.observacaoMedica,
   'data_nascimento': instance.data_nascimento,
+  'primeiroAcesso': instance.primeiroAcesso,
 };

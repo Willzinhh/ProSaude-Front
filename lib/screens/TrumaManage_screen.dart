@@ -18,16 +18,15 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
     descricao: 'descrição',
     horaInicio: '12:30',
     horaFim: '12:30',
-  );
-  List<dynamic> _turmas = []; // Lista original da API
-  List<dynamic> _turmasFiltradas = []; // Lista que aparece na tela
+    vagas: 20);
+  List<dynamic> _turmas = [];
+  List<dynamic> _turmasFiltradas = [];
   bool _isLoading = true;
 
   List<String> _diasSelecionados = [];
   TimeOfDay? _horaInicio;
   TimeOfDay? _horaFim;
 
-  // Lista de dias para o Checkbox
   final List<String> _todosDias = [
     "SEGUNDA",
     "TERCA",
@@ -74,13 +73,11 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
       print("passou aqui");
 
       setState(() {
-        // Filtramos a lista completa usando o campo 'perfil' que vem do Java
         _apenasBolsistas = listaCompleta
             .where((u) => u.perfil == "BOLSISTA")
             .toList();
       });
 
-      // Debug para ver se os dados chegaram (Olha o terminal do VS Code/Android Studio)
       print("Bolsistas encontrados: ${_apenasBolsistas.length}");
     } catch (e) {
       setState(() => _carregandoEquipe = false);
@@ -91,7 +88,7 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
   void _filtrar(String query) {
     setState(() {
       _turmasFiltradas = _turmas
-          .where((at) => at['nome'].toLowerCase().contains(query.toLowerCase()))
+          .where((at) => at.nome.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
@@ -102,7 +99,6 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
       appBar: AppBar(title: const Text("Gerenciar Turmas")),
       body: Column(
         children: [
-          // BARRA DE BUSCA
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: TextField(
@@ -118,12 +114,10 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
             ),
           ),
 
-          // LISTA DE Turmas
           Expanded(
             child: ListView.builder(
               itemCount: _turmasFiltradas.length,
               itemBuilder: (context, index) {
-                // Agora o 'item' é uma instância da classe Turma
                 final Turma item = _turmasFiltradas[index];
 
                 return ListTile(
@@ -146,13 +140,12 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                         icon: const Icon(Icons.edit, color: Colors.blue),
                         tooltip: 'Editar Turma',
                         onPressed: () =>
-                            _abrirFormulario(item), // Passa o objeto Turma
+                            _abrirFormulario(item),
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         tooltip: 'Excluir Turma',
                         onPressed: () {
-                          // Garante que o ID não é nulo antes de tentar excluir
                           if (item.id != null) {
                             _confirmarExclusao(item.id!);
                           }
@@ -166,7 +159,6 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
           ),
         ],
       ),
-      // BOTÃO DE CRIAR NOVA
       floatingActionButton: FloatingActionButton(
         onPressed: () => _abrirFormulario(null),
         child: const Icon(Icons.add),
@@ -174,12 +166,13 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
     );
   }
 
-  // Métodos auxiliares para Criar/Editar e Excluir
   void _abrirFormulario(Turma? item) {
-    // Se 'item' existe, preenchemos os campos (Edição). Se não, ficam vazios (Criação).
     final nomeController = TextEditingController(text: item?.nome ?? "");
     final descricaoController = TextEditingController(
       text: item?.descricao ?? "",
+    );
+    final inscritosController = TextEditingController(
+      text: item?.vagas != null ? item!.vagas.toString() : "",
     );
 
     if (item != null && item.id != null) {
@@ -193,9 +186,7 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
       if (item.aulaSexta == true) _diasSelecionados.add("SEXTA");
       if (item.aulaSabado == true) _diasSelecionados.add("SABADO");
       if (item.aulaDomingo == true) _diasSelecionados.add("DOMINGO");
-      // Copia a lista para evitar bugs
 
-      // Converte String "HH:mm:ss" para TimeOfDay
       if (item.horaInicio.isNotEmpty) {
         final partes = item.horaInicio.split(':');
         _horaInicio = TimeOfDay(
@@ -221,7 +212,7 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Importante para o teclado não cobrir o campo
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -233,7 +224,9 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                 padding: EdgeInsets.only(
                   bottom: MediaQuery.of(
                     context,
-                  ).viewInsets.bottom, // Ajusta o espaço do teclado
+                  )
+                      .viewInsets
+                      .bottom,
                   left: 20,
                   right: 20,
                   top: 20,
@@ -276,7 +269,27 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                             value!.isEmpty ? "Informe a Descrição" : null,
                       ),
                       const SizedBox(height: 15),
-                      // --- DROPDOWN BOLSISTAS ---
+
+                      TextFormField(
+                        controller: inscritosController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: "Quantidade Máxima de Inscritos",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.group),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return "Informe a quantidade limite de alunos";
+                          }
+                          if (int.tryParse(value) == null ||
+                              int.parse(value) <= 0) {
+                            return "Insira um número válido maior que 0";
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 15),
                       DropdownButtonFormField<int>(
                         value:
                             _apenasBolsistas.any(
@@ -301,7 +314,6 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                             setModalState(() => _idBolsistaSelecionado = val),
                       ),
 
-                      // --- SELEÇÃO DE HORÁRIOS ---
                       Row(
                         children: [
                           Expanded(
@@ -317,20 +329,16 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                                   context: context,
                                   initialTime: _horaInicio ?? TimeOfDay.now(),
                                   helpText: "SELECIONE O HORÁRIO DE INÍCIO",
-                                  // Texto no topo
                                   confirmText: "DEFINIR",
                                   cancelText: "VOLTAR",
-                                  // TROQUE O MODO AQUI:
                                   initialEntryMode: TimePickerEntryMode.input,
-                                  // Muda para entrada de teclado
                                   builder: (context, child) {
                                     return Theme(
                                       data: Theme.of(context).copyWith(
                                         colorScheme: const ColorScheme.light(
                                           primary: Colors.teal,
-                                          // Cor dos ponteiros/botão
                                           onSurface:
-                                              Colors.black, // Cor dos números
+                                          Colors.black,
                                         ),
                                       ),
                                       child: child!,
@@ -356,20 +364,16 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                                   context: context,
                                   initialTime: _horaFim ?? TimeOfDay.now(),
                                   helpText: "SELECIONE O HORÁRIO DE FIM",
-                                  // Texto no topo
                                   confirmText: "DEFINIR",
                                   cancelText: "VOLTAR",
-                                  // TROQUE O MODO AQUI:
                                   initialEntryMode: TimePickerEntryMode.input,
-                                  // Muda para entrada de teclado
                                   builder: (context, child) {
                                     return Theme(
                                       data: Theme.of(context).copyWith(
                                         colorScheme: const ColorScheme.light(
                                           primary: Colors.teal,
-                                          // Cor dos ponteiros/botão
                                           onSurface:
-                                              Colors.black, // Cor dos números
+                                          Colors.black,
                                         ),
                                       ),
                                       child: child!,
@@ -385,7 +389,6 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                       ),
                       const SizedBox(height: 15),
 
-                      // --- DIAS DA SEMANA (Chips) ---
                       const Text(
                         "Dias da Semana:",
                         style: TextStyle(fontWeight: FontWeight.bold),
@@ -396,7 +399,6 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                           final selecionado = _diasSelecionados.contains(dia);
                           return FilterChip(
                             label: Text(dia.substring(0, 3)),
-                            // Mostra só "SEG", "TER"...
                             selected: selecionado,
                             onSelected: (bool value) {
                               setModalState(() {
@@ -444,6 +446,7 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                               id: item?.id,
                               nome: nomeController.text,
                               descricao: descricaoController.text,
+                              vagas: int.parse(inscritosController.text),
                               bolsista_responsavel: bolsistaEscolhido,
                               horaInicio: formatTime(_horaInicio!),
                               horaFim: formatTime(_horaFim!),
@@ -460,16 +463,13 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                               ),
                             );
 
-                            // 1. Chama o serviço e espera terminar (await)
                             bool sucesso = await TurmaService().salvarTurma(
                               atv,
                             );
 
                             if (sucesso) {
-                              // 2. Fecha o Modal
                               Navigator.pop(context);
 
-                              // 3. Recarrega a lista do banco (Isso atualiza a tela automaticamente)
                               _carregarTurmas();
 
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -517,12 +517,11 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               final service = TurmaService();
-              // O token deve vir do seu Provider ou SharedPreferences
               bool sucesso = await service.excluirTurma(id);
 
               if (sucesso) {
                 Navigator.pop(ctx);
-                _carregarTurmas(); // Recarrega a lista
+                _carregarTurmas();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Excluído com sucesso!")),
                 );

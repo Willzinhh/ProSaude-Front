@@ -22,7 +22,6 @@ class GroupContainer extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Título posicionado na borda superior
           Positioned(
             top: -24,
             left: 10,
@@ -39,7 +38,6 @@ class GroupContainer extends StatelessWidget {
               ),
             ),
           ),
-          // Conteúdo interno (os inputs)
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: children,

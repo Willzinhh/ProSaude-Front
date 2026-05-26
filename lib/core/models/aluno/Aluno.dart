@@ -1,4 +1,5 @@
 class Aluno {
+  final int id;
   final String nome;
   final String cpf;
   final String telefone;
@@ -6,6 +7,7 @@ class Aluno {
   final String? dataInscricao;
 
   Aluno({
+    required this.id,
     required this.nome,
     required this.cpf,
     required this.telefone,
@@ -16,10 +18,11 @@ class Aluno {
   // Converte o JSON que vem do Java (Map) para o objeto AlunoInscrito
   factory Aluno.fromJson(Map<String, dynamic> json) {
     return Aluno(
-      // O operador ?? garante que se o campo vier nulo, o app não quebre
+
+      id: (json['id']),
+
       nome: json['nome'] ?? "Nome não informado",
 
-      // Aqui tratamos a confusão de 'cpf' vs 'CPF'
       cpf: (json['cpf'] ?? json['CPF'] ?? "---").toString(),
 
       telefone: json['telefone'] ?? "Sem contato",

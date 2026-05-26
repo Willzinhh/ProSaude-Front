@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:prosaude/core/services/inscricao_service.dart';
 
 class FormularioInscricaoScreen extends StatefulWidget {
-  final int?
-  turmaId; // Para saber em qual turma ele quer entrar após se cadastrar
+  final int? turmaId;
+
   const FormularioInscricaoScreen({required this.turmaId});
 
   @override
@@ -14,7 +14,6 @@ class FormularioInscricaoScreen extends StatefulWidget {
 class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers
   final _inscricaoService = InscricaoService();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
@@ -27,8 +26,6 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
   String _gerarSemestreAtual() {
     final agora = DateTime.now();
     final ano = agora.year;
-    // Se o mês for menor ou igual a 6 (Junho), é o 1º semestre.
-    // Caso contrário, é o 2º semestre.
     final semestre = agora.month <= 6 ? 1 : 2;
 
     return "$ano/$semestre";
@@ -95,8 +92,6 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
   }
 
   void _selecionarArquivo() async {
-    // Aqui você usaria o FilePicker para selecionar o PDF/Imagem
-    // Ex: FilePickerResult? result = await FilePicker.platform.pickFiles();
     setState(() {
       _caminhoAtestado = "atestado_selecionado.pdf";
     });
@@ -111,7 +106,6 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
       );
 
       try {
-        // 1. Prepara o mapa de dados
         final dados = {
           "nome": _nomeController.text,
           "email": _emailController.text,
@@ -124,16 +118,13 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
           "dataNascimento": "2000-01-01",
         };
 
-        // 2. CHAMA O SERVICE (A UI não sabe que existe Dio aqui)
         print("******* ${_nomeController}");
         await _inscricaoService.enviarAutoCadastro(dados);
-        // Agora sim o pop faz sentido: ele fecha o CircularProgressIndicator
         if (!mounted) return;
         Navigator.pop(context);
 
         _showSucessoDialog();
       } catch (e) {
-        // Se deu erro, também precisamos fechar o loading antes de mostrar o erro
         if (!mounted) return;
         Navigator.pop(context);
 
@@ -173,7 +164,6 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
         ),
         backgroundColor: Colors.red.shade700,
         behavior: SnackBarBehavior.floating,
-        // Faz a snackbar "flutuar" sobre o conteúdo
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         duration: const Duration(seconds: 4),
         action: SnackBarAction(

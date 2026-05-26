@@ -18,14 +18,11 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isObscure = true;
   bool _isLoading = false;
 
-  // No topo do arquivo:
-  // import '../services/api_service.dart';
-
   void _handleLogin() async {
     int? uid;
 
     if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true); // Opcional: mostrar um loading
+      setState(() => _isLoading = true);
 
       try {
         final api = AuthService();
@@ -35,8 +32,6 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         if (resultado != null) {
-          // --- A MUDANÇA ESTÁ AQUI ---
-          // Em vez de passar token, nome e perfil separados, passamos o objeto 'resultado' todo
           await SessionManager.saveSession(resultado);
 
           final sessao = await SessionManager.getSession();
@@ -48,8 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
           print("Sessão salva para o usuário: ${resultado.nome}");
 
-          if (!mounted)
-            return; // Boa prática para evitar erros de contexto no Navigator
+          if (!mounted) return;
 
           if (resultado.primeiroAcesso == true) {
             Navigator.pushReplacement(
@@ -101,7 +95,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // Campo de E-mail
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -118,7 +111,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 15),
 
-                // Campo de Senha
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _isObscure,
@@ -140,7 +132,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // Botão de Entrar
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -154,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 TextButton(
-                  onPressed: () {}, // Lógica de "Esqueci a senha"
+                  onPressed: () {},
                   child: const Text("Esqueceu a senha?"),
                 ),
               ],

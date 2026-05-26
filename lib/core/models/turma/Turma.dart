@@ -8,6 +8,7 @@ class Turma {
   final int? id;
   final String nome;
   final String descricao;
+  final int? vagas;
   final Usuario? bolsista_responsavel;
   final String horaInicio;
   final String horaFim;
@@ -30,6 +31,7 @@ class Turma {
     this.id,
     required this.nome,
     required this.descricao,
+    required this.vagas,
     this.bolsista_responsavel,
     required this.horaInicio,
     required this.horaFim,

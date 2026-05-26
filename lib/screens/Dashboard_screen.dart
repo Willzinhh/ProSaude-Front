@@ -14,7 +14,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  String _nome = "Carregando...";
+  String _nome = "Carregando";
   String _perfil = "";
   late Future<List<Turma>> _futureTurmas;
 
@@ -22,7 +22,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _carregarDadosUsuario();
-    // Inicializamos o future aqui para evitar múltiplas chamadas na reconstrução do widget
 
     _futureTurmas = TurmaService().carregarTurmasDashboard();
   }
@@ -152,21 +151,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onTap: () {
                     print("e");
                   },
-
-                  // () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ())),
-                ),
-                _buildActionCard(
-                  context,
-                  icon: Icons.assignment,
-                  label: "Avaliaçoes",
-                  color: Colors.blue.shade700,
-                  onTap: () {
-                    print("e");
-                  },
                 ),
               ]),
             ],
-            // --- SEÇÃO DE TURMAS (CARDS LARGOS - FULL WIDTH) ---
             if (_perfil == "BOLSISTA") ...[
               const Text(
                 "Minhas Turmas Ativas",
@@ -203,7 +190,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
 
-            // --- SEÇÃO DE TURMAS (CARDS LARGOS - FULL WIDTH) ---
           ],
         ),
       ),
@@ -213,21 +199,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildGridAcoes(List<Widget> cards) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Definimos que cada card normal ocupa 50% da largura (menos o espaçamento)
         double larguraMeia = (constraints.maxWidth / 2) - 8;
         double larguraCheia = constraints.maxWidth;
 
         return Wrap(
-          spacing: 16, // Espaço entre os cards na horizontal
-          runSpacing: 16, // Espaço entre as linhas
+          spacing: 16,
+          runSpacing: 16,
           children: List.generate(cards.length, (index) {
-            // Se for o último item e o total de itens for ímpar
             bool ehUltimoESozinho =
                 (index == cards.length - 1) && (cards.length % 2 != 0);
 
             return SizedBox(
               width: ehUltimoESozinho ? larguraCheia : larguraMeia,
-              height: 160, // Altura fixa para manter o alinhamento
+              height: 160,
               child: cards[index],
             );
           }),
@@ -236,7 +220,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Widget para os botões quadrados do Grid
   Widget _buildActionCard(
     BuildContext context, {
     required IconData icon,
@@ -259,7 +242,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Card(
       elevation: 4,
       margin: EdgeInsets.zero,
-      // Importante zerar para o Wrap controlar o espaço
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: InkWell(
         onTap: onTap,
@@ -300,7 +282,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return diasAtivos;
   }
 
-  // Widget para os cards de Turma que ocupam a largura total (Full Width)
   Widget _buildWideTurmaCard(
     String _perfil,
     BuildContext context,

@@ -18,7 +18,6 @@ class AlunoService {
     );
   }
 
-  // Busca apenas quem é ALUNO (Crie esse endpoint no Spring depois)
   Future<List<Usuario>> getAlunos() async {
     final response = await _dio.get("/usuarios/alunos");
     return (response.data as List)
@@ -28,11 +27,9 @@ class AlunoService {
 
   Future<bool> salvarAluno(Usuario aluno) async {
     if (aluno.id == null) {
-      // Criar novo
       final response = await _dio.post("/usuarios", data: aluno.toJson());
       return response.statusCode == 201;
     } else {
-      // Editar existente
       final response = await _dio.put(
         "/usuarios/${aluno.id}",
         data: aluno.toJson(),

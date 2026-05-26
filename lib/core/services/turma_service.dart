@@ -8,7 +8,6 @@ class TurmaService {
   final Dio _dio = Dio(BaseOptions(baseUrl: "http://10.0.2.2:8081/ProSaude"));
 
   TurmaService() {
-    // Configura o "segurança" que coloca o token em todas as chamadas
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -22,28 +21,21 @@ class TurmaService {
     );
   }
 
-  /// 1. LISTAR (READ)
   Future<List<Turma>> getTurmas() async {
     final response = await _dio.get("/turma");
-    // response.data já é uma lista, não precisa de json.decode
     return (response.data as List).map((data) => Turma.fromJson(data)).toList();
   }
 
-  // 2. CRIAR (CREATE)
   Future<bool> criarTurma(Turma turma) async {
-    // Note: Não precisa mais buscar o token aqui, o Interceptor faz isso!
-    // E não precisa de jsonEncode, o Dio aceita o .toJson() direto
     final response = await _dio.post("/turma", data: turma.toJson());
     return response.statusCode == 201;
   }
 
-  // 3. EDITAR (UPDATE)
   Future<bool> salvarTurma(Turma turma) async {
     final response = await _dio.put("/turma", data: turma.toJson());
     return response.statusCode == 200;
   }
 
-  // 4. EXCLUIR (DELETE)
   Future<bool> excluirTurma(int id) async {
     final response = await _dio.delete("/turma/$id");
     return response.statusCode == 204 || response.statusCode == 200;
@@ -57,7 +49,6 @@ class TurmaService {
     print("$id");
     print("$semestre");
 
-    // Se for aluno ou bolsista, buscamos apenas o que lhe pertence
     if (perfil == "BOLSISTA") {
       final response = await _dio.get("/turma/minhas-turmas/$id");
       return (response.data as List).map((i) => Turma.fromJson(i)).toList();
@@ -77,8 +68,6 @@ class TurmaService {
   String _gerarSemestreAtual() {
     final agora = DateTime.now();
     final ano = agora.year;
-    // Se o mês for menor ou igual a 6 (Junho), é o 1º semestre.
-    // Caso contrário, é o 2º semestre.
     final semestre = agora.month <= 6 ? 1 : 2;
 
     return "$ano/$semestre";

@@ -10,7 +10,7 @@ class AvaliacaoModel {
   String? anaFumaTempo;
   bool anaAlcool = false;
   String? anaQualiSono;
-  String? anaHsSono; // Pode ser enviado como "08:00:00"
+  String? anaHsSono;
   double? anaCoposAguaDia;
   String? anaAlimentacao;
   double? anaRefDia;
@@ -27,13 +27,13 @@ class AvaliacaoModel {
   double? antRcq;
   String? antRcqClass;
 
-  // Dores (O nosso Mapa!)
+  // Dores
   double? comEscalaFig;
   double? comEscalaFigQuer;
   bool comDorehj = false;
   Map<String, int> comDores = {};
 
-  // Dados do Sono (Pittsburgh)
+
   Map<String, dynamic> dadosSono = {};
 
   // Postura (Textos)
@@ -63,7 +63,6 @@ class AvaliacaoModel {
 
   AvaliacaoModel();
 
-  // Converte o objeto Dart para o JSON que o Spring Boot espera receber
   Map<String, dynamic> toJson() {
     return {
       if (id != null) 'id': id,

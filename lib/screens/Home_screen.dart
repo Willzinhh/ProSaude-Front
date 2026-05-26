@@ -26,12 +26,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _verificarSessaoAtiva() async {
-    // 1. Busca o token no seu SessionManager
     final token = await SessionManager.getToken();
 
-    // 2. Se o token existir e não estiver vazio, ele pula o login
     if (token != null && token.isNotEmpty) {
-      // Usamos o Microtask ou um pequeno delay para garantir que o contexto esteja pronto
       Future.microtask(() {
         Navigator.pushReplacementNamed(context, '/dashboard');
       });
@@ -65,7 +62,7 @@ class _HomePageState extends State<HomePage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Wrap(
-                spacing: 6, // Espaço horizontal entre os dias
+                spacing: 6,
                 runSpacing: 6,
                 children: diasAtivo.map((dia) {
                   return Container(
@@ -117,10 +114,9 @@ class _HomePageState extends State<HomePage> {
           ElevatedButton(
             onPressed: () async {
               final token = await SessionManager.getToken();
-              Navigator.pop(context); // Fecha o modal de detalhes
+              Navigator.pop(context);
 
               if (token != null && token.isNotEmpty) {
-                // USUÁRIO LOGADO: Vai direto para o formulário (ou lógica de inscrição direta)
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -144,7 +140,6 @@ class _HomePageState extends State<HomePage> {
     // Pega o número do dia (1 = Segunda, 7 = Domingo)
     int diaNum = DateTime.now().weekday;
 
-    // Mapeia para o padrão que salvamos no Java (Enum String)
     Map<int, String> mapaDias = {
       1: "SEGUNDA",
       2: "TERCA",
@@ -157,7 +152,6 @@ class _HomePageState extends State<HomePage> {
 
     String hoje = mapaDias[diaNum] ?? "";
 
-    // Filtra as turmas que CONTÉM o dia de hoje na lista delas
     return todas.where((t) {
       switch (hoje) {
         case "SEGUNDA":
@@ -175,7 +169,7 @@ class _HomePageState extends State<HomePage> {
         case "DOMINGO":
           return t.aulaDomingo;
         default:
-          return false; // Se não reconhecer o dia, não mostra a turma
+          return false;
       }
     }).toList();
   }
@@ -200,10 +194,8 @@ class _HomePageState extends State<HomePage> {
                   final token = await SessionManager.getToken();
 
                   if (token != null && token.isNotEmpty) {
-                    // Se logado, vai direto para o Dashboard
                     Navigator.pushNamed(context, '/dashboard');
                   } else {
-                    // Se não, vai para a tela de login
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -260,18 +252,14 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
 
-                  // IMPLEMENTAÇÃO DO CARROSSEL COM DADOS DO BANCO
                   slider.CarouselSlider(
                     options: slider.CarouselOptions(
                       height: 180.0,
-                      // SÓ ATIVA O AUTOPLAY SE TIVER ITENS
                       autoPlay: turmasDeHoje.isNotEmpty,
-                      // SE ESTIVER VAZIO, OCUPA 100% DA LARGURA (P/ CENTRALIZAR), SENÃO 85%
                       viewportFraction: turmasDeHoje.isEmpty ? 1.0 : 0.85,
                       enlargeCenterPage: turmasDeHoje.isNotEmpty,
                       aspectRatio: 16 / 9,
                       autoPlayCurve: Curves.fastOutSlowIn,
-                      // SÓ FAZ O LOOP INFINITO SE TIVER MAIS DE 1 TURMA
                       enableInfiniteScroll: turmasDeHoje.length > 1,
                     ),
                     items: turmasDeHoje.isEmpty
@@ -293,7 +281,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
 
-                  // Mantendo o GridView abaixo para listagem completa
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -320,7 +307,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Widget para o item individual do Carrossel
   Widget _buildCarouselItem(Turma turma) {
     final diasAtivo = diasAtivos(turma);
 
@@ -356,7 +342,7 @@ class _HomePageState extends State<HomePage> {
                   const Icon(Icons.star, color: Colors.white, size: 30),
                   const Spacer(),
                   Wrap(
-                    spacing: 6, // Espaço horizontal entre os dias
+                    spacing: 6,
                     children: diasAtivo.map((dia) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
@@ -406,7 +392,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Função auxiliar para limpar a string "08:30:00" -> "08:30"
   String formatarHora(String? hora) {
     if (hora == null || hora.isEmpty) return "--:--";
     return hora.substring(0, 5);
@@ -433,7 +418,7 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Wrap(
-                spacing: 6, // Espaço horizontal entre os dias
+                spacing: 6,
                 children: diasAtivos.map((dia) {
                   return Container(
                     padding: const EdgeInsets.symmetric(
@@ -487,10 +472,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCardVazio() {
-    // Pega a data de hoje formatada
     DateTime hoje = DateTime.now();
 
-    // Lista manual para o nome do dia em português (ou use o pacote intl)
     List<String> diasPt = [
       "Segunda-feira",
       "Terça-feira",
@@ -509,7 +492,7 @@ class _HomePageState extends State<HomePage> {
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1), // Estilo fosco/glassmorphism
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white24),
       ),
@@ -545,10 +528,9 @@ class _HomePageState extends State<HomePage> {
             "Para continuar com a inscrição, precisamos saber se você já é aluno do Pró-Saúde.",
           ),
           actions: [
-            // OPÇÃO 1: NÃO TEM CONTA
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Fecha o diálogo
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -560,10 +542,9 @@ class _HomePageState extends State<HomePage> {
               child: const Text("NÃO TENHO CONTA"),
             ),
 
-            // OPÇÃO 2: JÁ TEM CONTA
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context); // Fecha o diálogo
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginScreen()),

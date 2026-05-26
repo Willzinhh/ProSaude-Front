@@ -20,9 +20,6 @@ class _TrocarSenhaScreenState extends State<TrocarSenhaScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        // Você deve criar esse método no seu Service
-        // Ele deve dar um PUT no Java enviando a nova senha e
-        // o Java deve mudar o campo primeiroAcesso para false no DB.
         bool sucesso = await EquipeService().atualizarSenhaPrimeiroAcesso(
           widget.usuarioId,
           _novaSenhaController.text,
@@ -52,7 +49,7 @@ class _TrocarSenhaScreenState extends State<TrocarSenhaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Definir Nova Senha"),
-        automaticallyImplyLeading: false, // Remove botão de voltar
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
