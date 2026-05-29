@@ -4,6 +4,7 @@ import 'package:prosaude/core/models/usuario/Usuario.dart';
 
 import '../core/models/avaliacao/Avaliacao.dart';
 import '../core/services/avaliacao_service.dart';
+import '../core/services/session_manager.dart';
 import 'GroupContainer.dart';
 
 
@@ -18,6 +19,7 @@ class AvaliacaoFormScreen extends StatefulWidget {
 
 class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
   final AvaliacaoModel _avaliacao = AvaliacaoModel();
+  late final _id;
 
   final TextEditingController _q5jDescricaoCtrl = TextEditingController();
   final TextEditingController _q7RemedioQuaisCtrl = TextEditingController();
@@ -40,8 +42,19 @@ class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
   @override
   void initState() {
     super.initState();
+    _carregarDadosUsuario();
+
     _avaliacao.dataAvaliacao = DateTime.now();
   }
+  Future<void> _carregarDadosUsuario() async {
+    final sessao = await SessionManager.getSession();
+    if (sessao != null) {
+      setState(() {
+        _id = sessao.id;
+      });
+    }
+  }
+
 
   @override
   void dispose() {
@@ -185,7 +198,7 @@ class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
               DropdownButtonFormField<String>(
                 value: _avaliacao.anaAlimentacao,
                 decoration: const InputDecoration(labelText: 'Qualidade Geral da Alimentação', border: OutlineInputBorder()),
-                items: ["BOA", "REGULAR", "RUIM"].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                items: ["Boa", "Regular", "Ruim"].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                 onChanged: (val) => _avaliacao.anaAlimentacao = val,
               ),
               const SizedBox(height: 12),
@@ -227,7 +240,7 @@ class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
               DropdownButtonFormField<String>(
                 value: _avaliacao.anaQualiSono,
                 decoration: const InputDecoration(labelText: '6) Como classificaria a qualidade geral do sono?', border: OutlineInputBorder()),
-                items: ["Muito boa", "Boa", "Ruim", "Muito ruim"].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                items: ["Otima", "Boa", "Regular", "Pessima"].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                 onChanged: (val) => setState(() => _avaliacao.anaQualiSono = val),
               ),
               const SizedBox(height: 15),
@@ -595,11 +608,11 @@ class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
                   builder: (context) => const Center(child: CircularProgressIndicator()),
                 );
 
-                const int avaliadorIdLogado = 1;
+                final int avaliadorIdLogado = _id;
 
                 bool sucesso = await AvaliacaoService().salvarAvaliacao(
                   avaliacao: _avaliacao,
-                  alunoId: widget.aluno.id!,
+                  alunoId: widget.aluno.id,
                   avaliadorId: avaliadorIdLogado,
                 );
 
@@ -635,6 +648,7 @@ class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
     return DefaultTabController(
       length: 5,
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: Text('Avaliando: ${widget.aluno.nome}'),
           bottom: const TabBar(

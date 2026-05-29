@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:prosaude/core/services/session_manager.dart';
 
 import '../models/avaliacao/Avaliacao.dart';
@@ -30,7 +31,7 @@ class AvaliacaoService {
     required int alunoId,
     required int avaliadorId,
   }) async {
-    final String rotaRelativa = "/api/avaliacoes/aluno/$alunoId/avaliador/$avaliadorId";
+    final String rotaRelativa = "/avaliacoes/aluno/$alunoId/avaliador/$avaliadorId";
 
     try {
       print("Disparando POST via Dio para: ${_dio.options.baseUrl}$rotaRelativa");
@@ -58,6 +59,27 @@ class AvaliacaoService {
     } catch (e) {
       print("Falha inesperada no serviço de avaliação: $e");
       return false;
+    }
+  }
+
+  Future<List<AvaliacaoModel>> buscarAvaliacoesPorAluno(int alunoId) async {
+    try {
+      final response = await _dio.get('/avaliacoes/aluno/$alunoId');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> dadosJson = response.data;
+
+        // Converte cada item da lista JSON em uma instância de AvaliacaoModel
+        return dadosJson.map((json) => AvaliacaoModel.fromJson(json)).toList();
+      }
+
+      return [];
+    } on DioException catch (e) {
+      debugPrint('Erro Dio ao buscar avaliações do aluno $alunoId: ${e.message}');
+      throw Exception('Falha ao conectar com o servidor local.');
+    } catch (e) {
+      debugPrint('Erro geral ao buscar avaliações: $e');
+      throw Exception('Erro inesperado ao carregar dados.');
     }
   }
 }

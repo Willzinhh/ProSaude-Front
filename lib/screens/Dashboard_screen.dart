@@ -1,7 +1,11 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:prosaude/core/models/turma/Turma.dart';
 import 'package:prosaude/core/services/session_manager.dart';
 import 'package:prosaude/core/services/turma_service.dart';
+import 'package:prosaude/screens/AvaliacaoDetalhesScreen.dart';
+import 'package:prosaude/screens/AvaliacaoHistoricoScreen.dart';
 import 'package:prosaude/screens/EquipeManageScreen.dart';
 import 'package:prosaude/screens/TrumaManage_screen.dart';
 import 'package:prosaude/screens/lista_inscritos_screen.dart';
@@ -14,10 +18,10 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  late int _id;
   String _nome = "Carregando";
   String _perfil = "";
   late Future<List<Turma>> _futureTurmas;
-
   @override
   void initState() {
     super.initState();
@@ -30,7 +34,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final sessao = await SessionManager.getSession();
     if (sessao != null) {
       setState(() {
-        _nome = sessao.nome ?? "Usuário";
+        _id = sessao.id!;
+       _nome = sessao.nome ?? "Usuário";
         _perfil = sessao.perfil ?? "";
       });
     }
@@ -148,9 +153,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   icon: Icons.assignment,
                   label: "Avaliaçoes",
                   color: Colors.blue.shade700,
-                  onTap: () {
-                    print("e");
-                  },
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AvaliacaoHistoricoScreen(id: _id,),
+                    ),
+                  ),
                 ),
               ]),
             ],

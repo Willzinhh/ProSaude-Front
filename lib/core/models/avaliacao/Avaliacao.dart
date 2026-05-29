@@ -1,3 +1,7 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'Avaliacao.g.dart';
+@JsonSerializable(explicitToJson: true)
 class AvaliacaoModel {
   int? id;
   DateTime? dataAvaliacao;
@@ -63,59 +67,10 @@ class AvaliacaoModel {
 
   AvaliacaoModel();
 
-  Map<String, dynamic> toJson() {
-    return {
-      if (id != null) 'id': id,
-      'dataAvaliacao': dataAvaliacao?.toIso8601String().split('T')[0],
-      'anaProfi': anaProfi,
-      'anaHsTrab': anaHsTrab,
-      'anaTurnTrab': anaTurnTrab,
-      'anaFuma': anaFuma,
-      'anaFumaTempo': anaFumaTempo,
-      'anaAlcool': anaAlcool,
-      'anaQualiSono': anaQualiSono,
-      'anaHsSono': anaHsSono,
-      'anaCoposAguaDia': anaCoposAguaDia,
-      'anaAlimentacao': anaAlimentacao,
-      'anaRefDia': anaRefDia,
-      'anaCirurgia': anaCirurgia,
-      'anaProbCardiaco': anaProbCardiaco,
-      'antPeso': antPeso,
-      'antAltura': antAltura,
-      'antImc': antImc,
-      'antImcClass': antImcClass,
-      'antPeriCintura': antPeriCintura,
-      'antPeriQuadril': antPeriQuadril,
-      'antRcq': antRcq,
-      'antRcqClass': antRcqClass,
-      'comEscalaFig': comEscalaFig,
-      'comEscalaFigQuer': comEscalaFigQuer,
-      'comDorehj': comDorehj,
-      'comDores': comDores,
-      'dadosSono': dadosSono,
-      'posAnteriorCabeca': posAnteriorCabeca,
-      'posAnteriorOmbros': posAnteriorOmbros,
-      'posAnteriorCompBracos': posAnteriorCompBracos,
-      'posAnteriorTrianguloTales': posAnteriorTrianguloTales,
-      'posAnteriorTronco': posAnteriorTronco,
-      'posAnteriorLinhaMamilar': posAnteriorLinhaMamilar,
-      'posAnteriorEquiHorizPelvico': posAnteriorEquiHorizPelvico,
-      'posAnteriorCicatrizUmbilical': posAnteriorCicatrizUmbilical,
-      'posAnteriorQuadrilRod': posAnteriorQuadrilRod,
-      'posAnteriorJoelhos': posAnteriorJoelhos,
-      'posAnteriorPes': posAnteriorPes,
-      'posPerfilCabeca': posPerfilCabeca,
-      'posPerfilOmbros': posPerfilOmbros,
-      'posPerfilMembrosSuperiores': posPerfilMembrosSuperiores,
-      'posColunaCervical': posColunaCervical,
-      'posColunaDorsal': posColunaDorsal,
-      'posColunaLombar': posColunaLombar,
-      'posColunaQuadril': posColunaQuadril,
-      'posColunaJoelhos': posColunaJoelhos,
-      'posPosteriorEscoliose': posPosteriorEscoliose,
-      'posPosteriorGibosidade': posPosteriorGibosidade,
-      'posPosteriorTendaoAquiles': posPosteriorTendaoAquiles,
-      'obs': obs,
-    };
-  }
+  factory AvaliacaoModel.fromJson(Map<String, dynamic> json) => _$AvaliacaoModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$AvaliacaoModelToJson(this);
+
+
+
 }
