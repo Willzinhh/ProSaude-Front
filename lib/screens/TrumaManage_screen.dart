@@ -147,7 +147,7 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                         tooltip: 'Excluir Turma',
                         onPressed: () {
                           if (item.id != null) {
-                            _confirmarExclusao(item.id!);
+                            _confirmarExclusaoTurma(item.id!);
                           }
                         },
                       ),
@@ -502,35 +502,41 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
     );
   }
 
-  void _confirmarExclusao(int id) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Excluir Turma?"),
-        content: const Text("Isso removerá a turma permanentemente."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancelar"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              final service = TurmaService();
-              bool sucesso = await service.excluirTurma(id);
+  void _confirmarExclusaoTurma(int idTurma) async {
+    try {
+      // Tenta excluir chamando o service
+      await TurmaService().excluirTurma(idTurma);
 
-              if (sucesso) {
-                Navigator.pop(ctx);
-                _carregarTurmas();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Excluído com sucesso!")),
-                );
-              }
-            },
-            child: const Text("Excluir"),
-          ),
-        ],
-      ),
-    );
+      // Se der certo, mostra sucesso ou atualiza a lista...
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Turma excluída com sucesso!")),
+      );
+    } catch (erro) {
+      // 🎯 Captura a mensagem limpa ("Não é possível excluir esta turma...")
+      final textoErro = erro.toString();
+
+      // Abre o Pop-up de aviso na tela
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.warning, color: Colors.orange),
+                SizedBox(width: 10),
+                Text("Aviso"),
+              ],
+            ),
+            content: Text(textoErro), // Exibe a mensagem vinda do Java
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(), // Fecha o pop-up
+                child: const Text("OK"),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 }

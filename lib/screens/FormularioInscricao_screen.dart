@@ -177,13 +177,9 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
     );
   }
 
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label,
-    IconData icon,
-  ) {
+  Widget _buildTextField(TextEditingController controller, String label, IconData icon) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.only(bottom: 16.0), // Margem entre os campos
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(
@@ -191,6 +187,44 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
           prefixIcon: Icon(icon),
           border: const OutlineInputBorder(),
         ),
+        // Ativa o teclado numérico para os campos específicos
+        keyboardType: (label == "CPF" || label == "WhatsApp" || label == "Contato de Emergência")
+            ? TextInputType.number
+            : (label == "E-mail") ? TextInputType.emailAddress : TextInputType.text,
+
+        // 🎯 Regras de validação para cada tipo de campo
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) {
+            return 'O campo $label é obrigatório.';
+          }
+
+          if (label == "Nome Completo" && value.trim().length < 3) {
+            return 'O nome deve conter pelo menos 3 letras.';
+          }
+
+          if (label == "E-mail") {
+            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+            if (!emailRegex.hasMatch(value.trim())) {
+              return 'Insira um e-mail válido.';
+            }
+          }
+
+          if (label == "CPF") {
+            final apenasNumeros = value.replaceAll(RegExp(r'[^0-9]'), '');
+            if (apenasNumeros.length != 11) {
+              return 'O CPF deve ter exatamente 11 dígitos.';
+            }
+          }
+
+          if (label == "WhatsApp" || label == "Contato de Emergência") {
+            final apenasNumeros = value.replaceAll(RegExp(r'[^0-9]'), '');
+            if (apenasNumeros.length < 10) {
+              return 'Insira um número válido com DDD.';
+            }
+          }
+
+          return null; // Campo válido!
+        },
       ),
     );
   }

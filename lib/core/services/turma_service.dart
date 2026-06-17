@@ -36,9 +36,20 @@ class TurmaService {
     return response.statusCode == 200;
   }
 
-  Future<bool> excluirTurma(int id) async {
-    final response = await _dio.delete("/turma/$id");
-    return response.statusCode == 204 || response.statusCode == 200;
+  Future<void> excluirTurma(int id) async {
+    try {
+      await _dio.delete("/turma/$id");
+    } on DioException catch (e) {
+      final data = e.response?.data;
+
+      // Se houver conflito de integridade no banco (Status 409)
+      if (e.response?.statusCode == 409) {
+        if (data is Map<String, dynamic>) {
+          throw MensagemDeErro(data['mensagem'] ?? "Não é possível excluir esta turma.");
+        }
+      }
+      throw MensagemDeErro("Erro ao tentar excluir a turma.");
+    }
   }
 
   Future<List<Turma>> carregarTurmasDashboard() async {
@@ -72,4 +83,11 @@ class TurmaService {
 
     return "$ano/$semestre";
   }
+}
+class MensagemDeErro extends Error {
+  final String mensagem;
+  MensagemDeErro(this.mensagem);
+
+  @override
+  String toString() => mensagem; // Retorna apenas o texto limpo
 }
