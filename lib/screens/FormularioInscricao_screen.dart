@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:prosaude/core/services/aluno_service.dart';
 import 'package:prosaude/core/services/inscricao_service.dart';
+// ⚠️ Certifique-se de que o caminho do seu SessionManager está correto:
+import 'package:prosaude/core/services/session_manager.dart';
+import 'package:prosaude/core/services/auth_service.dart'; // Seus dados virão daqui
 
 class FormularioInscricaoScreen extends StatefulWidget {
   final int? turmaId;
@@ -15,6 +19,8 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _inscricaoService = InscricaoService();
+  final _alunoService = AlunoService(); // Instanciado para buscar os dados do aluno
+
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
   final _cpfController = TextEditingController();
@@ -22,6 +28,55 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
   final _emergenciaController = TextEditingController();
   final _doencasController = TextEditingController();
   String? _caminhoAtestado;
+
+  bool _estaCarregandoPerfil = false;
+  bool _camposBloqueados = false; // Define se vamos travar os inputs após preencher
+
+  @override
+  void initState() {
+    super.initState();
+    _verificarSeUsuarioEstaLogado();
+  }
+
+  Future<void> _verificarSeUsuarioEstaLogado() async {
+    try {
+      final session = await SessionManager.getSession();
+      print("Usuário na sessão: ${session?.nome}");
+
+      if (session != null && session.id != null) {
+        print('Iniciando preenchimento automático para o aluno...');
+        setState(() {
+          _estaCarregandoPerfil = true;
+        });
+
+        // Busca os dados cadastrados no Back-end
+        final dadosAluno = await _alunoService.getAluno();
+
+        setState(() {
+          _nomeController.text = dadosAluno.nome ?? '';
+          _emailController.text = dadosAluno.email ?? '';
+          _cpfController.text = dadosAluno.cpf ?? '';
+          _whatsappController.text = dadosAluno.telefone ?? '';
+          _emergenciaController.text = dadosAluno.telefone_emergencia ?? '';
+          _doencasController.text = dadosAluno.observacaoMedica ?? '';
+
+          _camposBloqueados = true;
+          _estaCarregandoPerfil = false;
+        });
+      } else {
+        setState(() {
+          _estaCarregandoPerfil = false;
+        });
+      }
+    } catch (e) {
+      print("Erro capturado no fluxo de auto-preenchimento: $e");
+      // Se a API falhar (ex: 403), desliga o loading para o aluno conseguir digitar na raça
+      setState(() {
+        _estaCarregandoPerfil = false;
+        _camposBloqueados = false;
+      });
+    }
+  }
 
   String _gerarSemestreAtual() {
     final agora = DateTime.now();
@@ -35,7 +90,9 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Formulário de Inscrição")),
-      body: SingleChildScrollView(
+      body: _estaCarregandoPerfil
+          ? const Center(child: CircularProgressIndicator()) // Feedback visual de carregamento
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
@@ -55,6 +112,7 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
               TextFormField(
                 controller: _doencasController,
                 maxLines: 3,
+                readOnly: _camposBloqueados, // Bloqueia se já vier do banco
                 decoration: const InputDecoration(
                   labelText: "Possui doenças crônicas? Se sim, quais?",
                   border: OutlineInputBorder(),
@@ -118,7 +176,7 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
           "dataNascimento": "2000-01-01",
         };
 
-        print("******* ${_nomeController}");
+        print("******* ${_nomeController.text}");
         await _inscricaoService.enviarAutoCadastro(dados);
         if (!mounted) return;
         Navigator.pop(context);
@@ -138,9 +196,9 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Sucesso!"),
-        content: const Text(
-          "Sua inscrição foi realizada. Use seu CPF para realizar o primeiro login.",
-        ),
+        content: Text(_camposBloqueados
+            ? "Sua inscrição nesta turma foi realizada com sucesso!"
+            : "Sua inscrição foi realizada. Use seu CPF para realizar o primeiro login."),
         actions: [
           TextButton(
             onPressed: () =>
@@ -179,51 +237,47 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
 
   Widget _buildTextField(TextEditingController controller, String label, IconData icon) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0), // Margem entre os campos
+      padding: const EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
         controller: controller,
+        readOnly: _camposBloqueados, // 🎯 Bloqueia o campo para edição se o aluno já estiver logado
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
           border: const OutlineInputBorder(),
+          filled: _camposBloqueados,
+          fillColor: _camposBloqueados ? Colors.grey[100] : null, // Efeito visual cinza se bloqueado
         ),
-        // Ativa o teclado numérico para os campos específicos
         keyboardType: (label == "CPF" || label == "WhatsApp" || label == "Contato de Emergência")
             ? TextInputType.number
             : (label == "E-mail") ? TextInputType.emailAddress : TextInputType.text,
 
-        // 🎯 Regras de validação para cada tipo de campo
         validator: (value) {
           if (value == null || value.trim().isEmpty) {
             return 'O campo $label é obrigatório.';
           }
-
           if (label == "Nome Completo" && value.trim().length < 3) {
             return 'O nome deve conter pelo menos 3 letras.';
           }
-
           if (label == "E-mail") {
             final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
             if (!emailRegex.hasMatch(value.trim())) {
               return 'Insira um e-mail válido.';
             }
           }
-
           if (label == "CPF") {
             final apenasNumeros = value.replaceAll(RegExp(r'[^0-9]'), '');
             if (apenasNumeros.length != 11) {
               return 'O CPF deve ter exatamente 11 dígitos.';
             }
           }
-
           if (label == "WhatsApp" || label == "Contato de Emergência") {
             final apenasNumeros = value.replaceAll(RegExp(r'[^0-9]'), '');
             if (apenasNumeros.length < 10) {
               return 'Insira um número válido com DDD.';
             }
           }
-
-          return null; // Campo válido!
+          return null;
         },
       ),
     );

@@ -32,4 +32,6 @@ class Aluno {
       dataInscricao: json['dataInscricao']?.toString(),
     );
   }
+
+  String? operator [](String other) {}
 }

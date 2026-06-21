@@ -14,7 +14,7 @@ class AvaliacaoModel {
   String? anaFumaTempo;
   bool anaAlcool = false;
   String? anaQualiSono;
-  String? anaHsSono;
+  double? anaHsSono;
   double? anaCoposAguaDia;
   String? anaAlimentacao;
   double? anaRefDia;

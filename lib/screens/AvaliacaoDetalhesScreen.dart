@@ -150,7 +150,7 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
           GroupContainer(
             title: 'Qualidade de Sono (Pittsburgh)',
             children: [
-              _buildDadoLinha(label: 'Horas médias de sono', valor: avaliacao.anaHsSono),
+              _buildDadoLinha(label: 'Horas médias de sono', valor: avaliacao.anaHsSono.toString()),
               const SizedBox(height: 10),
               const Text("Frequência de problemas para dormir no último mês:", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
               const SizedBox(height: 8),

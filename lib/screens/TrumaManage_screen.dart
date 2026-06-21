@@ -13,12 +13,6 @@ class TurmaManageScreen extends StatefulWidget {
 
 class _TurmaManageScreenState extends State<TurmaManageScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final novaTurma = Turma(
-    nome: 'nome',
-    descricao: 'descrição',
-    horaInicio: '12:30',
-    horaFim: '12:30',
-    vagas: 20);
   List<dynamic> _turmas = [];
   List<dynamic> _turmasFiltradas = [];
   bool _isLoading = true;
@@ -37,17 +31,41 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
     "DOMINGO",
   ];
 
+  late List<String> _opcoesSemestresForm;
+  late String _semestreFiltroSelecionado;
+
   List<Usuario> _apenasBolsistas = [];
-
-  int? _idBolsistaSelecionado;
-
+  int? _idBolsistaSelecionado; // Controla o formulário modal
+  int? _idBolsistaFiltroSelecionado; // 🎯 NOVA VARIÁVEL: Controla o filtro da tela principal
   bool _carregandoEquipe = true;
 
   @override
   void initState() {
     super.initState();
+    _opcoesSemestresForm = _gerarListaSemestres();
+    _semestreFiltroSelecionado = _gerarSemestreAtual();
+
     _carregarTurmas();
     _carregarEquipe();
+  }
+
+  List<String> _gerarListaSemestres() {
+    final List<String> semestres = [];
+    final int anoAtual = DateTime.now().year;
+
+    for (int i = 0; i <= 10; i++) {
+      int ano = anoAtual + i;
+      semestres.add("$ano/1");
+      semestres.add("$ano/2");
+    }
+    return semestres;
+  }
+
+  String _gerarSemestreAtual() {
+    final agora = DateTime.now();
+    final ano = agora.year;
+    final semestre = agora.month <= 6 ? "1" : "2";
+    return "$ano/$semestre";
   }
 
   Future<void> _carregarTurmas() async {
@@ -56,8 +74,8 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
       final lista = await TurmaService().getTurmas();
       setState(() {
         _turmas = lista;
-        _turmasFiltradas = lista;
         _isLoading = false;
+        _aplicarFiltros();
       });
     } catch (e) {
       setState(() => _isLoading = false);
@@ -70,26 +88,34 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
   Future<void> _carregarEquipe() async {
     try {
       final listaCompleta = await EquipeService().listarEquipe();
-      print("passou aqui");
-
       setState(() {
         _apenasBolsistas = listaCompleta
             .where((u) => u.perfil == "BOLSISTA")
             .toList();
+        _carregandoEquipe = false;
       });
-
-      print("Bolsistas encontrados: ${_apenasBolsistas.length}");
     } catch (e) {
       setState(() => _carregandoEquipe = false);
       print("Erro ao carregar: $e");
     }
   }
 
-  void _filtrar(String query) {
+  void _aplicarFiltros() {
+    final queryNome = _searchController.text.toLowerCase();
+
     setState(() {
-      _turmasFiltradas = _turmas
-          .where((at) => at.nome.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      _turmasFiltradas = _turmas.where((turma) {
+        final bateNome = turma.nome.toLowerCase().contains(queryNome);
+
+        final bateSemestre = _semestreFiltroSelecionado == "TODOS" ||
+            turma.semestre == _semestreFiltroSelecionado;
+
+        // 🎯 NOVA REGRA FILTRO: Se não selecionou nenhum (null), mostra todos. Caso contrário filtra pelo ID do responsável
+        final bateBolsista = _idBolsistaFiltroSelecionado == null ||
+            turma.bolsista_responsavel?.id == _idBolsistaFiltroSelecionado;
+
+        return bateNome && bateSemestre && bateBolsista;
+      }).toList();
     });
   }
 
@@ -100,10 +126,10 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.only(left: 12.0, right: 12.0, top: 12.0, bottom: 6.0),
             child: TextField(
               controller: _searchController,
-              onChanged: _filtrar,
+              onChanged: (_) => _aplicarFiltros(),
               decoration: InputDecoration(
                 labelText: "Buscar por nome...",
                 prefixIcon: const Icon(Icons.search),
@@ -113,9 +139,71 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 15),
+
+          // Seletor de Semestre na Listagem
+          Padding(
+            padding: const EdgeInsets.only(left: 12.0, right: 12.0, bottom: 6.0),
+            child: DropdownButtonFormField<String>(
+              value: _semestreFiltroSelecionado,
+              decoration: InputDecoration(
+                labelText: "Filtrar por Semestre Letivo",
+                prefixIcon: const Icon(Icons.filter_alt, color: Colors.teal),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              items: ["TODOS", ..._opcoesSemestresForm]
+                  .map((sem) => DropdownMenuItem(
+                value: sem,
+                child: Text(sem == "TODOS" ? "Todos os Semestres" : "Semestre $sem"),
+              ))
+                  .toList(),
+              onChanged: (val) {
+                if (val != null) {
+                  _semestreFiltroSelecionado = val;
+                  _aplicarFiltros();
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: 15),
+
+          // 🎯 NOVO DROPDOWN: Filtrar por Bolsista Responsável na tela principal
+          Padding(
+            padding: const EdgeInsets.only(left: 12.0, right: 12.0, bottom: 12.0),
+            child: DropdownButtonFormField<int?>(
+              value: _idBolsistaFiltroSelecionado,
+              decoration: InputDecoration(
+                labelText: "Filtrar por Bolsista Responsável",
+                prefixIcon: const Icon(Icons.school, color: Colors.teal),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              items: [
+                const DropdownMenuItem<int?>(
+                  value: null,
+                  child: Text("Todos os Bolsistas"),
+                ),
+                ..._apenasBolsistas.map((b) => DropdownMenuItem<int?>(
+                  value: b.id,
+                  child: Text(b.nome),
+                )),
+              ],
+              onChanged: (val) {
+                _idBolsistaFiltroSelecionado = val;
+                _aplicarFiltros();
+              },
+            ),
+          ),
 
           Expanded(
-            child: ListView.builder(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: Colors.teal))
+                : _turmasFiltradas.isEmpty
+                ? const Center(child: Text("Nenhuma turma encontrada para os filtros aplicados."))
+                : ListView.builder(
               itemCount: _turmasFiltradas.length,
               itemBuilder: (context, index) {
                 final Turma item = _turmasFiltradas[index];
@@ -133,14 +221,17 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                     item.nome,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
+                  subtitle: Text(
+                      "Semestre: ${item.semestre}\nBolsista: ${item.bolsista_responsavel?.nome ?? 'Não definido'}"
+                  ),
+                  isThreeLine: true,
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                         icon: const Icon(Icons.edit, color: Colors.blue),
                         tooltip: 'Editar Turma',
-                        onPressed: () =>
-                            _abrirFormulario(item),
+                        onPressed: () => _abrirFormulario(item),
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
@@ -168,12 +259,12 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
 
   void _abrirFormulario(Turma? item) {
     final nomeController = TextEditingController(text: item?.nome ?? "");
-    final descricaoController = TextEditingController(
-      text: item?.descricao ?? "",
-    );
+    final descricaoController = TextEditingController(text: item?.descricao ?? "");
     final inscritosController = TextEditingController(
       text: item?.vagas != null ? item!.vagas.toString() : "",
     );
+
+    String semestreSelecionado = item?.semestre ?? _gerarSemestreAtual();
 
     if (item != null && item.id != null) {
       _idBolsistaSelecionado = item.bolsista_responsavel?.id;
@@ -222,276 +313,283 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
             builder: (BuildContext context, StateSetter setModalState) {
               return Padding(
                 padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(
-                    context,
-                  )
-                      .viewInsets
-                      .bottom,
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
                   left: 20,
                   right: 20,
                   top: 20,
                 ),
                 child: Form(
                   key: _formKeyModal,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        item == null ? "Nova Turma" : "Editar Turma",
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: nomeController,
-                        decoration: const InputDecoration(
-                          labelText: "Nome da Turma",
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.fitness_center),
-                        ),
-                        validator: (value) =>
-                            value!.isEmpty ? "Informe o nome" : null,
-                      ),
-                      const SizedBox(height: 15),
-
-                      TextFormField(
-                        controller: descricaoController,
-                        decoration: const InputDecoration(
-                          labelText: "Descrição da Turma",
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.fitness_center),
-                        ),
-                        validator: (value) =>
-                            value!.isEmpty ? "Informe a Descrição" : null,
-                      ),
-                      const SizedBox(height: 15),
-
-                      TextFormField(
-                        controller: inscritosController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: "Quantidade Máxima de Inscritos",
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.group),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return "Informe a quantidade limite de alunos";
-                          }
-                          if (int.tryParse(value) == null ||
-                              int.parse(value) <= 0) {
-                            return "Insira um número válido maior que 0";
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 15),
-                      DropdownButtonFormField<int>(
-                        value:
-                            _apenasBolsistas.any(
-                              (b) => b.id == _idBolsistaSelecionado,
-                            )
-                            ? _idBolsistaSelecionado
-                            : null,
-                        decoration: const InputDecoration(
-                          labelText: "Selecionar Bolsista",
-                          prefixIcon: Icon(Icons.school),
-                          border: OutlineInputBorder(),
-                        ),
-                        items: _apenasBolsistas
-                            .map(
-                              (b) => DropdownMenuItem(
-                                value: b.id,
-                                child: Text(b.nome),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (val) =>
-                            setModalState(() => _idBolsistaSelecionado = val),
-                      ),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              icon: const Icon(Icons.access_time),
-                              label: Text(
-                                _horaInicio == null
-                                    ? "Início"
-                                    : _horaInicio!.format(context),
-                              ),
-                              onPressed: () async {
-                                final time = await showTimePicker(
-                                  context: context,
-                                  initialTime: _horaInicio ?? TimeOfDay.now(),
-                                  helpText: "SELECIONE O HORÁRIO DE INÍCIO",
-                                  confirmText: "DEFINIR",
-                                  cancelText: "VOLTAR",
-                                  initialEntryMode: TimePickerEntryMode.input,
-                                  builder: (context, child) {
-                                    return Theme(
-                                      data: Theme.of(context).copyWith(
-                                        colorScheme: const ColorScheme.light(
-                                          primary: Colors.teal,
-                                          onSurface:
-                                          Colors.black,
-                                        ),
-                                      ),
-                                      child: child!,
-                                    );
-                                  },
-                                );
-                                if (time != null)
-                                  setModalState(() => _horaInicio = time);
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              icon: const Icon(Icons.timer_off),
-                              label: Text(
-                                _horaFim == null
-                                    ? "Fim"
-                                    : _horaFim!.format(context),
-                              ),
-                              onPressed: () async {
-                                final time = await showTimePicker(
-                                  context: context,
-                                  initialTime: _horaFim ?? TimeOfDay.now(),
-                                  helpText: "SELECIONE O HORÁRIO DE FIM",
-                                  confirmText: "DEFINIR",
-                                  cancelText: "VOLTAR",
-                                  initialEntryMode: TimePickerEntryMode.input,
-                                  builder: (context, child) {
-                                    return Theme(
-                                      data: Theme.of(context).copyWith(
-                                        colorScheme: const ColorScheme.light(
-                                          primary: Colors.teal,
-                                          onSurface:
-                                          Colors.black,
-                                        ),
-                                      ),
-                                      child: child!,
-                                    );
-                                  },
-                                );
-                                if (time != null)
-                                  setModalState(() => _horaFim = time);
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 15),
-
-                      const Text(
-                        "Dias da Semana:",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Wrap(
-                        spacing: 8,
-                        children: _todosDias.map((dia) {
-                          final selecionado = _diasSelecionados.contains(dia);
-                          return FilterChip(
-                            label: Text(dia.substring(0, 3)),
-                            selected: selecionado,
-                            onSelected: (bool value) {
-                              setModalState(() {
-                                if (value) {
-                                  _diasSelecionados.add(dia);
-                                } else {
-                                  _diasSelecionados.remove(dia);
-                                }
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
-
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                        ),
-                        onPressed: () async {
-                          if (_formKeyModal.currentState!.validate()) {
-                            if (_horaInicio == null ||
-                                _horaFim == null ||
-                                _idBolsistaSelecionado == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    "Preencha horários e selecione um bolsista!",
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-
-                            Usuario bolsistaEscolhido = _apenasBolsistas
-                                .firstWhere(
-                                  (b) => b.id == _idBolsistaSelecionado,
-                                );
-
-                            String formatTime(TimeOfDay t) =>
-                                "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:00";
-
-                            Turma atv = Turma(
-                              id: item?.id,
-                              nome: nomeController.text,
-                              descricao: descricaoController.text,
-                              vagas: int.parse(inscritosController.text),
-                              bolsista_responsavel: bolsistaEscolhido,
-                              horaInicio: formatTime(_horaInicio!),
-                              horaFim: formatTime(_horaFim!),
-                              aulaSegunda: _diasSelecionados.contains(
-                                "SEGUNDA",
-                              ),
-                              aulaTerca: _diasSelecionados.contains("TERCA"),
-                              aulaQuarta: _diasSelecionados.contains("QUARTA"),
-                              aulaQuinta: _diasSelecionados.contains("QUINTA"),
-                              aulaSexta: _diasSelecionados.contains("SEXTA"),
-                              aulaSabado: _diasSelecionados.contains("SABADO"),
-                              aulaDomingo: _diasSelecionados.contains(
-                                "DOMINGO",
-                              ),
-                            );
-
-                            bool sucesso = await TurmaService().salvarTurma(
-                              atv,
-                            );
-
-                            if (sucesso) {
-                              Navigator.pop(context);
-
-                              _carregarTurmas();
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Salvo com sucesso!"),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-                            }
-                          }
-                        },
-
-                        child: Text(
-                          item == null ? "CADASTRAR" : "SALVAR ALTERAÇÕES",
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          item == null ? "Nova Turma" : "Editar Turma",
                           style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: nomeController,
+                          decoration: const InputDecoration(
+                            labelText: "Nome da Turma",
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.fitness_center),
+                          ),
+                          validator: (value) =>
+                          value!.isEmpty ? "Informe o nome" : null,
+                        ),
+                        const SizedBox(height: 15),
+
+                        TextFormField(
+                          controller: descricaoController,
+                          decoration: const InputDecoration(
+                            labelText: "Descrição da Turma",
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.fitness_center),
+                          ),
+                          validator: (value) =>
+                          value!.isEmpty ? "Informe a Descrição" : null,
+                        ),
+                        const SizedBox(height: 15),
+
+                        DropdownButtonFormField<String>(
+                          value: _opcoesSemestresForm.contains(semestreSelecionado)
+                              ? semestreSelecionado
+                              : _opcoesSemestresForm.first,
+                          decoration: const InputDecoration(
+                            labelText: "Semestre Letivo",
+                            prefixIcon: Icon(Icons.calendar_month),
+                            border: OutlineInputBorder(),
+                          ),
+                          items: _opcoesSemestresForm
+                              .map(
+                                (sem) => DropdownMenuItem(
+                              value: sem,
+                              child: Text(sem),
+                            ),
+                          )
+                              .toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setModalState(() => semestreSelecionado = val);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 15),
+
+                        TextFormField(
+                          controller: inscritosController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: "Quantidade Máxima de Inscritos",
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.group),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return "Informe a quantidade limite de alunos";
+                            }
+                            if (int.tryParse(value) == null ||
+                                int.parse(value) <= 0) {
+                              return "Insira um número válido maior que 0";
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 15),
+                        DropdownButtonFormField<int>(
+                          value: _apenasBolsistas.any((b) => b.id == _idBolsistaSelecionado)
+                              ? _idBolsistaSelecionado
+                              : null,
+                          decoration: const InputDecoration(
+                            labelText: "Selecionar Bolsista",
+                            prefixIcon: Icon(Icons.school),
+                            border: OutlineInputBorder(),
+                          ),
+                          items: _apenasBolsistas
+                              .map(
+                                (b) => DropdownMenuItem(
+                              value: b.id,
+                              child: Text(b.nome),
+                            ),
+                          )
+                              .toList(),
+                          onChanged: (val) =>
+                              setModalState(() => _idBolsistaSelecionado = val),
+                        ),
+                        const SizedBox(height: 15),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                icon: const Icon(Icons.access_time),
+                                label: Text(
+                                  _horaInicio == null
+                                      ? "Início"
+                                      : _horaInicio!.format(context),
+                                ),
+                                onPressed: () async {
+                                  final time = await showTimePicker(
+                                    context: context,
+                                    initialTime: _horaInicio ?? TimeOfDay.now(),
+                                    helpText: "SELECIONE O HORÁRIO DE INÍCIO",
+                                    confirmText: "DEFINIR",
+                                    cancelText: "VOLTAR",
+                                    initialEntryMode: TimePickerEntryMode.input,
+                                    builder: (context, child) {
+                                      return Theme(
+                                        data: Theme.of(context).copyWith(
+                                          colorScheme: const ColorScheme.light(
+                                            primary: Colors.teal,
+                                            onSurface: Colors.black,
+                                          ),
+                                        ),
+                                        child: child!,
+                                      );
+                                    },
+                                  );
+                                  if (time != null)
+                                    setModalState(() => _horaInicio = time);
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                icon: const Icon(Icons.timer_off),
+                                label: Text(
+                                  _horaFim == null
+                                      ? "Fim"
+                                      : _horaFim!.format(context),
+                                ),
+                                onPressed: () async {
+                                  final time = await showTimePicker(
+                                    context: context,
+                                    initialTime: _horaFim ?? TimeOfDay.now(),
+                                    helpText: "SELECIONE O HORÁRIO DE FIM",
+                                    confirmText: "DEFINIR",
+                                    cancelText: "VOLTAR",
+                                    initialEntryMode: TimePickerEntryMode.input,
+                                    builder: (context, child) {
+                                      return Theme(
+                                        data: Theme.of(context).copyWith(
+                                          colorScheme: const ColorScheme.light(
+                                            primary: Colors.teal,
+                                            onSurface: Colors.black,
+                                          ),
+                                        ),
+                                        child: child!,
+                                      );
+                                    },
+                                  );
+                                  if (time != null)
+                                    setModalState(() => _horaFim = time);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 15),
+
+                        const Text(
+                          "Dias da Semana:",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Wrap(
+                          spacing: 8,
+                          children: _todosDias.map((dia) {
+                            final selecionado = _diasSelecionados.contains(dia);
+                            return FilterChip(
+                              label: Text(dia.substring(0, 3)),
+                              selected: selecionado,
+                              onSelected: (bool value) {
+                                setModalState(() {
+                                  if (value) {
+                                    _diasSelecionados.add(dia);
+                                  } else {
+                                    _diasSelecionados.remove(dia);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
+
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal,
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                          ),
+                          onPressed: () async {
+                            if (_formKeyModal.currentState!.validate()) {
+                              if (_horaInicio == null ||
+                                  _horaFim == null ||
+                                  _idBolsistaSelecionado == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Preencha horários e selecione um bolsista!"),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              Usuario bolsistaEscolhido = _apenasBolsistas
+                                  .firstWhere((b) => b.id == _idBolsistaSelecionado);
+
+                              String formatTime(TimeOfDay t) =>
+                                  "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:00";
+
+                              Turma atv = Turma(
+                                id: item?.id,
+                                nome: nomeController.text,
+                                descricao: descricaoController.text,
+                                vagas: int.parse(inscritosController.text),
+                                semestre: semestreSelecionado,
+                                bolsista_responsavel: bolsistaEscolhido,
+                                horaInicio: formatTime(_horaInicio!),
+                                horaFim: formatTime(_horaFim!),
+                                aulaSegunda: _diasSelecionados.contains("SEGUNDA"),
+                                aulaTerca: _diasSelecionados.contains("TERCA"),
+                                aulaQuarta: _diasSelecionados.contains("QUARTA"),
+                                aulaQuinta: _diasSelecionados.contains("QUINTA"),
+                                aulaSexta: _diasSelecionados.contains("SEXTA"),
+                                aulaSabado: _diasSelecionados.contains("SABADO"),
+                                aulaDomingo: _diasSelecionados.contains("DOMINGO"),
+                              );
+
+                              bool sucesso = await TurmaService().salvarTurma(atv);
+
+                              if (sucesso) {
+                                Navigator.pop(context);
+                                _carregarTurmas();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Salvo com sucesso!"),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: Text(
+                            item == null ? "CADASTRAR" : "SALVAR ALTERAÇÕES",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 30),
-                    ],
+                        const SizedBox(height: 30),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -504,18 +602,13 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
 
   void _confirmarExclusaoTurma(int idTurma) async {
     try {
-      // Tenta excluir chamando o service
       await TurmaService().excluirTurma(idTurma);
-
-      // Se der certo, mostra sucesso ou atualiza a lista...
+      _carregarTurmas();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Turma excluída com sucesso!")),
       );
     } catch (erro) {
-      // 🎯 Captura a mensagem limpa ("Não é possível excluir esta turma...")
       final textoErro = erro.toString();
-
-      // Abre o Pop-up de aviso na tela
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -527,10 +620,10 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
                 Text("Aviso"),
               ],
             ),
-            content: Text(textoErro), // Exibe a mensagem vinda do Java
+            content: Text(textoErro),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(), // Fecha o pop-up
+                onPressed: () => Navigator.of(context).pop(),
                 child: const Text("OK"),
               ),
             ],

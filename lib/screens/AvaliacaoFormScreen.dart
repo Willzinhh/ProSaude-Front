@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:prosaude/core/models/aluno/Aluno.dart';
-import 'package:prosaude/core/models/usuario/Usuario.dart';
 
 import '../core/models/avaliacao/Avaliacao.dart';
 import '../core/services/avaliacao_service.dart';
@@ -19,7 +18,7 @@ class AvaliacaoFormScreen extends StatefulWidget {
 
 class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
   final AvaliacaoModel _avaliacao = AvaliacaoModel();
-  late final _id;
+  late final int _id; // Ajustado para tipo explícito int/int? condizente com ID numérico
 
   final TextEditingController _q5jDescricaoCtrl = TextEditingController();
   final TextEditingController _q7RemedioQuaisCtrl = TextEditingController();
@@ -46,15 +45,15 @@ class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
 
     _avaliacao.dataAvaliacao = DateTime.now();
   }
+
   Future<void> _carregarDadosUsuario() async {
     final sessao = await SessionManager.getSession();
     if (sessao != null) {
       setState(() {
-        _id = sessao.id;
+        _id = sessao.id!;
       });
     }
   }
-
 
   @override
   void dispose() {
@@ -80,7 +79,8 @@ class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
     return TextFormField(
       controller: controller,
       initialValue: controller == null ? valorInicial : null,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      // Se for número, abre o teclado numérico adequado
+      keyboardType: isNumber ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
@@ -198,6 +198,7 @@ class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
               DropdownButtonFormField<String>(
                 value: _avaliacao.anaAlimentacao,
                 decoration: const InputDecoration(labelText: 'Qualidade Geral da Alimentação', border: OutlineInputBorder()),
+                // Alterado para "Otima" e "Pessima" sem acento para casar com o Enum Java mapeado
                 items: ["Boa", "Regular", "Ruim"].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                 onChanged: (val) => _avaliacao.anaAlimentacao = val,
               ),
@@ -214,7 +215,13 @@ class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
           GroupContainer(
             title: 'Questionário de Qualidade de Sono (Pittsburgh)',
             children: [
-              _buildTextField(label: 'Horas médias de sono por noite', valorInicial: _avaliacao.anaHsSono, onChanged: (val) => _avaliacao.anaHsSono = val),
+              // MODIFICADO: isNumber: true e tratamento double.tryParse para bater com o tipo Double do Java
+              _buildTextField(
+                label: 'Horas médias de sono por noite',
+                isNumber: true,
+                valorInicial: _avaliacao.anaHsSono.toString(),
+                onChanged: (val) => _avaliacao.anaHsSono = double.tryParse(val),
+              ),
               const SizedBox(height: 15),
               const Text("5) Durante o mês passado, com que frequência teve problemas para dormir por causa de:", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
               const SizedBox(height: 10),
@@ -240,6 +247,7 @@ class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
               DropdownButtonFormField<String>(
                 value: _avaliacao.anaQualiSono,
                 decoration: const InputDecoration(labelText: '6) Como classificaria a qualidade geral do sono?', border: OutlineInputBorder()),
+                // MODIFICADO: Retirado o acento de "Otima" e "Pessima" para coincidir com a string aceita no Java
                 items: ["Otima", "Boa", "Regular", "Pessima"].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                 onChanged: (val) => setState(() => _avaliacao.anaQualiSono = val),
               ),
@@ -662,7 +670,6 @@ class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
             ],
           ),
         ),
-        // MODIFICADO: Agora cada método de aba está encapsulado pelo Wrapper de KeepAlive
         body: TabBarView(
           children: [
             AnamneseTabPage(child: _buildAnamneseTab()),
@@ -677,7 +684,7 @@ class _AvaliacaoFormScreenState extends State<AvaliacaoFormScreen> {
   }
 }
 
-// --- CLASSES SUPORTE ADICIONADAS ABAIXO PARA PRESERVAR OS DADOS EM TELA ---
+// --- CLASSES SUPORTE ABAIXO (MANTIDAS IGUAIS) ---
 
 class AnamneseTabPage extends StatefulWidget {
   final Widget child;

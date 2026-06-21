@@ -170,13 +170,17 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
 
   Widget _buildMembroCard(Usuario membro) {
     final bool isCoordenador = membro.perfil == "COORDENADOR";
+
+    // 🎯 REGRA NO FRONT: Verifica se o card que está sendo renderizado é o do próprio usuário logado
+    // Substitua 'admin@admin' pela variável onde você armazena o e-mail do usuário logado no App, se houver.
+    final bool ehOProprioUsuarioLogado = membro.email == "admin@admin";
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       elevation: 1,
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: isCoordenador ? Colors.blueGrey[50] : Colors
-              .teal[50],
+          backgroundColor: isCoordenador ? Colors.blueGrey[50] : Colors.teal[50],
           child: Icon(
               isCoordenador ? Icons.admin_panel_settings : Icons.school,
               color: isCoordenador ? Colors.blueGrey : Colors.teal
@@ -193,8 +197,15 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
               onPressed: () => _abrirFormularioUsuario(membro),
             ),
             IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () => _confirmarExclusao(membro),
+              // 🎯 Deixa o ícone cinza se for o próprio usuário logado
+              icon: Icon(
+                  Icons.delete,
+                  color: ehOProprioUsuarioLogado ? Colors.grey.shade400 : Colors.red
+              ),
+              // 🎯 Bloqueia o clique passando 'null' se ele tentar se autoexcluir
+              onPressed: ehOProprioUsuarioLogado
+                  ? null
+                  : () => _confirmarExclusao(membro),
             ),
           ],
         ),
@@ -570,4 +581,5 @@ class _EquipeManageScreenState extends State<EquipeManageScreen> {
       ),
     );
   }
+
 }

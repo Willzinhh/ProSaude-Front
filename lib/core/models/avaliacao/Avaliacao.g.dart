@@ -20,7 +20,7 @@ AvaliacaoModel _$AvaliacaoModelFromJson(
   ..anaFumaTempo = json['anaFumaTempo'] as String?
   ..anaAlcool = json['anaAlcool'] as bool
   ..anaQualiSono = json['anaQualiSono'] as String?
-  ..anaHsSono = json['anaHsSono'] as String?
+  ..anaHsSono = (json['anaHsSono'] as num?)?.toDouble()
   ..anaCoposAguaDia = (json['anaCoposAguaDia'] as num?)?.toDouble()
   ..anaAlimentacao = json['anaAlimentacao'] as String?
   ..anaRefDia = (json['anaRefDia'] as num?)?.toDouble()

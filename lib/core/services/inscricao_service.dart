@@ -3,6 +3,8 @@ import 'package:prosaude/core/models/aluno/Aluno.dart';
 import 'package:prosaude/core/models/usuario/Usuario.dart';
 import 'package:prosaude/core/services/session_manager.dart';
 
+import 'auth_service.dart';
+
 class InscricaoService {
   final Dio _dio = Dio(
     BaseOptions(
@@ -45,6 +47,31 @@ class InscricaoService {
       return dados.map((item) => Aluno.fromJson(item)).toList();
     } catch (e) {
       throw Exception("Erro ao buscar inscritos");
+    }
+  }
+
+  Future<List<dynamic>> buscarHistoricoAlunos(int alunoId) async {
+    try {
+      final response = await _dio.get("/inscricao/historico/$alunoId");
+      return response.data; // Retorna a lista de turmas passadas
+    } catch (e) {
+      throw Exception("Erro ao carregar histórico");
+    }
+  }
+
+  Future<bool> deletarInscricao(int turmaId, int alunoId) async {
+    try {
+      // O endpoint concatena direto na baseUrl do Dio (/inscricao/{id} ou /inscricoes/{id})
+      // Ajuste para /inscricoes se o seu endpoint no Java usar o plural
+      final response = await _dio.delete("/inscricao/$turmaId/$alunoId");
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return true;
+      }
+      return false;
+    } on DioException catch (e) {
+      print("Erro no Delete: ${e.response?.data}");
+      throw Exception("Erro ao deletar inscrição: ${e.message}");
     }
   }
 }

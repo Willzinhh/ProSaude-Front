@@ -9,6 +9,7 @@ class Turma {
   final String nome;
   final String descricao;
   final int? vagas;
+  final String semestre;
   final Usuario? bolsista_responsavel;
   final String horaInicio;
   final String horaFim;
@@ -32,6 +33,7 @@ class Turma {
     required this.nome,
     required this.descricao,
     required this.vagas,
+    required this.semestre,
     this.bolsista_responsavel,
     required this.horaInicio,
     required this.horaFim,

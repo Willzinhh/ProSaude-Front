@@ -11,6 +11,7 @@ Turma _$TurmaFromJson(Map<String, dynamic> json) => Turma(
   nome: json['nome'] as String,
   descricao: json['descricao'] as String,
   vagas: (json['vagas'] as num?)?.toInt(),
+  semestre: json['semestre'] as String,
   bolsista_responsavel: json['bolsista_responsavel'] == null
       ? null
       : Usuario.fromJson(json['bolsista_responsavel'] as Map<String, dynamic>),
@@ -30,6 +31,7 @@ Map<String, dynamic> _$TurmaToJson(Turma instance) => <String, dynamic>{
   'nome': instance.nome,
   'descricao': instance.descricao,
   'vagas': instance.vagas,
+  'semestre': instance.semestre,
   'bolsista_responsavel': instance.bolsista_responsavel?.toJson(),
   'horaInicio': instance.horaInicio,
   'horaFim': instance.horaFim,
