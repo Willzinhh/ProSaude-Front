@@ -5,11 +5,13 @@ import 'GroupContainer.dart';
 class AvaliacaoDetalhesScreen extends StatelessWidget {
   final String aluno;
   final AvaliacaoModel avaliacao;
+  final dynamic perfilUsuario;
 
   const AvaliacaoDetalhesScreen({
     super.key,
     required this.aluno,
-    required this.avaliacao
+    required this.avaliacao,
+    required this.perfilUsuario,
   });
 
   // --- COMPONENTES AUXILIARES DE LEITURA (UI) ---
@@ -387,7 +389,10 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Resultados: $aluno', style: const TextStyle(fontSize: 18)),
+              Text(
+                perfilUsuario == "COORDENADOR" ? "Ficha de Avaliação" : "Resultados: $aluno",
+                style: const TextStyle(fontSize: 18),
+              ),
               Text(
                 'Data da Ficha: ${avaliacao.dataAvaliacao?.day}/${avaliacao.dataAvaliacao?.month}/${avaliacao.dataAvaliacao?.year}',
                 style: const TextStyle(fontSize: 12, color: Colors.white70),

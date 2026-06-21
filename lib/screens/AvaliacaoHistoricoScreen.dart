@@ -163,6 +163,7 @@ class _AvaliacaoHistoricoScreenState extends State<AvaliacaoHistoricoScreen> {
                         builder: (context) => AvaliacaoDetalhesScreen(
                           aluno: _nome,
                           avaliacao: avaliacao,
+                          perfilUsuario: _perfil,
                         ),
                       ),
                     );
