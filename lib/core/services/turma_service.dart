@@ -4,8 +4,8 @@ import '../models/turma/Turma.dart';
 import 'session_manager.dart';
 
 class TurmaService {
-  // A URL base agora vai até o ProSaude, o resto a gente completa nos métodos
-  final Dio _dio = Dio(BaseOptions(baseUrl: "http://10.0.2.2:8081/ProSaude"));
+  // A URL base agora vai até o ProSaude, o resto a gente completa nos métodos 10.0.2.2:8081
+  final Dio _dio = Dio(BaseOptions(baseUrl: "http://prosaude-back.onrender.com/ProSaude"));
 
   TurmaService() {
     _dio.interceptors.add(

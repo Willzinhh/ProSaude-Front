@@ -5,7 +5,7 @@ import '../models/usuario/Usuario.dart';
 import 'session_manager.dart';
 
 class AlunoService {
-  final Dio _dio = Dio(BaseOptions(baseUrl: "http://10.0.2.2:8081/ProSaude"));
+  final Dio _dio = Dio(BaseOptions(baseUrl: "http://prosaude-back.onrender.com/ProSaude"));
 
   AlunoService() {
     _dio.interceptors.add(

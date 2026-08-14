@@ -9,7 +9,7 @@ import 'auth_service.dart';
 class InscricaoService {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: "http://10.0.2.2:8081/ProSaude",
+      baseUrl: "http://prosaude-back.onrender.com/ProSaude",
     ),
   );
 
