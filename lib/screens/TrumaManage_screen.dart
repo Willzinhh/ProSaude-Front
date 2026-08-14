@@ -3,6 +3,7 @@ import 'package:prosaude/core/models/turma/Turma.dart';
 import 'package:prosaude/core/models/usuario/Usuario.dart';
 import 'package:prosaude/core/services/equipe_service.dart';
 import 'package:prosaude/core/services/turma_service.dart';
+import 'package:prosaude/widgets/widgets.dart';
 
 class TurmaManageScreen extends StatefulWidget {
   const TurmaManageScreen({super.key});
@@ -33,39 +34,28 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
 
   late List<String> _opcoesSemestresForm;
   late String _semestreFiltroSelecionado;
-
   List<Usuario> _apenasBolsistas = [];
+  int? _idBolsistaFiltroSelecionado;
+
   int? _idBolsistaSelecionado; // Controla o formulário modal
-  int? _idBolsistaFiltroSelecionado; // 🎯 NOVA VARIÁVEL: Controla o filtro da tela principal
-  bool _carregandoEquipe = true;
 
   @override
   void initState() {
     super.initState();
     _opcoesSemestresForm = _gerarListaSemestres();
     _semestreFiltroSelecionado = _gerarSemestreAtual();
-
     _carregarTurmas();
     _carregarEquipe();
   }
 
   List<String> _gerarListaSemestres() {
-    final List<String> semestres = [];
     final int anoAtual = DateTime.now().year;
-
-    for (int i = 0; i <= 10; i++) {
-      int ano = anoAtual + i;
-      semestres.add("$ano/1");
-      semestres.add("$ano/2");
-    }
-    return semestres;
+    return List.generate(20, (i) => "${anoAtual + (i ~/ 2)}/${(i % 2) + 1}");
   }
 
   String _gerarSemestreAtual() {
     final agora = DateTime.now();
-    final ano = agora.year;
-    final semestre = agora.month <= 6 ? "1" : "2";
-    return "$ano/$semestre";
+    return "${agora.year}/${agora.month <= 6 ? "1" : "2"}";
   }
 
   Future<void> _carregarTurmas() async {
@@ -79,41 +69,23 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erro ao conectar com o servidor: $e")),
-      );
     }
   }
 
   Future<void> _carregarEquipe() async {
-    try {
-      final listaCompleta = await EquipeService().listarEquipe();
-      setState(() {
-        _apenasBolsistas = listaCompleta
-            .where((u) => u.perfil == "BOLSISTA")
-            .toList();
-        _carregandoEquipe = false;
-      });
-    } catch (e) {
-      setState(() => _carregandoEquipe = false);
-      print("Erro ao carregar: $e");
-    }
+    final listaCompleta = await EquipeService().listarEquipe();
+    setState(() {
+      _apenasBolsistas = listaCompleta.where((u) => u.perfil == "BOLSISTA").toList();
+    });
   }
 
   void _aplicarFiltros() {
-    final queryNome = _searchController.text.toLowerCase();
-
+    final query = _searchController.text.toLowerCase();
     setState(() {
       _turmasFiltradas = _turmas.where((turma) {
-        final bateNome = turma.nome.toLowerCase().contains(queryNome);
-
-        final bateSemestre = _semestreFiltroSelecionado == "TODOS" ||
-            turma.semestre == _semestreFiltroSelecionado;
-
-        // 🎯 NOVA REGRA FILTRO: Se não selecionou nenhum (null), mostra todos. Caso contrário filtra pelo ID do responsável
-        final bateBolsista = _idBolsistaFiltroSelecionado == null ||
-            turma.bolsista_responsavel?.id == _idBolsistaFiltroSelecionado;
-
+        final bateNome = turma.nome.toLowerCase().contains(query);
+        final bateSemestre = _semestreFiltroSelecionado == "TODOS" || turma.semestre == _semestreFiltroSelecionado;
+        final bateBolsista = _idBolsistaFiltroSelecionado == null || turma.bolsista_responsavel?.id == _idBolsistaFiltroSelecionado;
         return bateNome && bateSemestre && bateBolsista;
       }).toList();
     });
@@ -126,39 +98,18 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 12.0, right: 12.0, top: 12.0, bottom: 6.0),
-            child: TextField(
+            padding: const EdgeInsets.all(12.0),
+            child: SearchInputField(
               controller: _searchController,
+              label: "Buscar por nome...",
               onChanged: (_) => _aplicarFiltros(),
-              decoration: InputDecoration(
-                labelText: "Buscar por nome...",
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
             ),
           ),
-          const SizedBox(height: 15),
-
-          // Seletor de Semestre na Listagem
           Padding(
-            padding: const EdgeInsets.only(left: 12.0, right: 12.0, bottom: 6.0),
-            child: DropdownButtonFormField<String>(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: SemestreDropdown(
               value: _semestreFiltroSelecionado,
-              decoration: InputDecoration(
-                labelText: "Filtrar por Semestre Letivo",
-                prefixIcon: const Icon(Icons.filter_alt, color: Colors.teal),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              items: ["TODOS", ..._opcoesSemestresForm]
-                  .map((sem) => DropdownMenuItem(
-                value: sem,
-                child: Text(sem == "TODOS" ? "Todos os Semestres" : "Semestre $sem"),
-              ))
-                  .toList(),
+              opcoes: _opcoesSemestresForm,
               onChanged: (val) {
                 if (val != null) {
                   _semestreFiltroSelecionado = val;
@@ -167,29 +118,15 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
               },
             ),
           ),
-          const SizedBox(height: 15),
-
-          // 🎯 NOVO DROPDOWN: Filtrar por Bolsista Responsável na tela principal
+          const SizedBox(height: 12),
           Padding(
-            padding: const EdgeInsets.only(left: 12.0, right: 12.0, bottom: 12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: DropdownButtonFormField<int?>(
               value: _idBolsistaFiltroSelecionado,
-              decoration: InputDecoration(
-                labelText: "Filtrar por Bolsista Responsável",
-                prefixIcon: const Icon(Icons.school, color: Colors.teal),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+              decoration: OutlineInputDecoration("Filtrar por Bolsista Responsável", Icons.school),
               items: [
-                const DropdownMenuItem<int?>(
-                  value: null,
-                  child: Text("Todos os Bolsistas"),
-                ),
-                ..._apenasBolsistas.map((b) => DropdownMenuItem<int?>(
-                  value: b.id,
-                  child: Text(b.nome),
-                )),
+                const DropdownMenuItem<int?>(value: null, child: Text("Todos os Bolsistas")),
+                ..._apenasBolsistas.map((b) => DropdownMenuItem<int?>(value: b.id, child: Text(b.nome))),
               ],
               onChanged: (val) {
                 _idBolsistaFiltroSelecionado = val;
@@ -197,50 +134,32 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
               },
             ),
           ),
-
+          const SizedBox(height: 12),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: Colors.teal))
-                : _turmasFiltradas.isEmpty
-                ? const Center(child: Text("Nenhuma turma encontrada para os filtros aplicados."))
                 : ListView.builder(
               itemCount: _turmasFiltradas.length,
               itemBuilder: (context, index) {
                 final Turma item = _turmasFiltradas[index];
-
                 return ListTile(
                   leading: const CircleAvatar(
                     backgroundColor: Colors.teal,
-                    child: Icon(
-                      Icons.fitness_center,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    child: Icon(Icons.fitness_center, color: Colors.white, size: 20),
                   ),
-                  title: Text(
-                    item.nome,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                      "Semestre: ${item.semestre}\nBolsista: ${item.bolsista_responsavel?.nome ?? 'Não definido'}"
-                  ),
+                  title: Text(item.nome, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text("Semestre: ${item.semestre}\nBolsista: ${item.bolsista_responsavel?.nome ?? 'Não definido'}"),
                   isThreeLine: true,
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                         icon: const Icon(Icons.edit, color: Colors.blue),
-                        tooltip: 'Editar Turma',
                         onPressed: () => _abrirFormulario(item),
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
-                        tooltip: 'Excluir Turma',
-                        onPressed: () {
-                          if (item.id != null) {
-                            _confirmarExclusaoTurma(item.id!);
-                          }
-                        },
+                        onPressed: () => _confirmarExclusaoTurma(item.id!),
                       ),
                     ],
                   ),
@@ -254,6 +173,14 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
         onPressed: () => _abrirFormulario(null),
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  InputDecoration OutlineInputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: Colors.teal),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
     );
   }
 
@@ -632,4 +559,5 @@ class _TurmaManageScreenState extends State<TurmaManageScreen> {
       );
     }
   }
+
 }

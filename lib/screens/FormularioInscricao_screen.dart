@@ -1,14 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:prosaude/core/services/aluno_service.dart';
 import 'package:prosaude/core/services/inscricao_service.dart';
-// ⚠️ Certifique-se de que o caminho do seu SessionManager está correto:
 import 'package:prosaude/core/services/session_manager.dart';
-import 'package:prosaude/core/services/auth_service.dart'; // Seus dados virão daqui
 
 class FormularioInscricaoScreen extends StatefulWidget {
   final int? turmaId;
 
-  const FormularioInscricaoScreen({required this.turmaId});
+  const FormularioInscricaoScreen({super.key, required this.turmaId});
 
   @override
   State<FormularioInscricaoScreen> createState() =>
@@ -19,7 +18,7 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _inscricaoService = InscricaoService();
-  final _alunoService = AlunoService(); // Instanciado para buscar os dados do aluno
+  final _alunoService = AlunoService();
 
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
@@ -30,7 +29,7 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
   String? _caminhoAtestado;
 
   bool _estaCarregandoPerfil = false;
-  bool _camposBloqueados = false; // Define se vamos travar os inputs após preencher
+  bool _camposBloqueados = false;
 
   @override
   void initState() {
@@ -38,18 +37,24 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
     _verificarSeUsuarioEstaLogado();
   }
 
+  @override
+  void dispose() {
+    _nomeController.dispose();
+    _emailController.dispose();
+    _cpfController.dispose();
+    _whatsappController.dispose();
+    _emergenciaController.dispose();
+    _doencasController.dispose();
+    super.dispose();
+  }
+
   Future<void> _verificarSeUsuarioEstaLogado() async {
     try {
       final session = await SessionManager.getSession();
-      print("Usuário na sessão: ${session?.nome}");
 
       if (session != null && session.id != null) {
-        print('Iniciando preenchimento automático para o aluno...');
-        setState(() {
-          _estaCarregandoPerfil = true;
-        });
+        setState(() => _estaCarregandoPerfil = true);
 
-        // Busca os dados cadastrados no Back-end
         final dadosAluno = await _alunoService.getAluno();
 
         setState(() {
@@ -63,14 +68,8 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
           _camposBloqueados = true;
           _estaCarregandoPerfil = false;
         });
-      } else {
-        setState(() {
-          _estaCarregandoPerfil = false;
-        });
       }
     } catch (e) {
-      print("Erro capturado no fluxo de auto-preenchimento: $e");
-      // Se a API falhar (ex: 403), desliga o loading para o aluno conseguir digitar na raça
       setState(() {
         _estaCarregandoPerfil = false;
         _camposBloqueados = false;
@@ -80,10 +79,8 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
 
   String _gerarSemestreAtual() {
     final agora = DateTime.now();
-    final ano = agora.year;
     final semestre = agora.month <= 6 ? 1 : 2;
-
-    return "$ano/$semestre";
+    return "${agora.year}/$semestre";
   }
 
   @override
@@ -91,7 +88,7 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text("Formulário de Inscrição")),
       body: _estaCarregandoPerfil
-          ? const Center(child: CircularProgressIndicator()) // Feedback visual de carregamento
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -107,21 +104,17 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
                 "Contato de Emergência",
                 Icons.emergency,
               ),
-
               const SizedBox(height: 10),
               TextFormField(
                 controller: _doencasController,
                 maxLines: 3,
-                readOnly: _camposBloqueados, // Bloqueia se já vier do banco
+                readOnly: _camposBloqueados,
                 decoration: const InputDecoration(
                   labelText: "Possui doenças crônicas? Se sim, quais?",
                   border: OutlineInputBorder(),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // Botão de Anexo
               ListTile(
                 leading: const Icon(Icons.attach_file),
                 title: Text(_caminhoAtestado ?? "Anexar Atestado Médico"),
@@ -131,9 +124,7 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-
               const SizedBox(height: 30),
-
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -176,17 +167,32 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
           "dataNascimento": "2000-01-01",
         };
 
-        print("******* ${_nomeController.text}");
         await _inscricaoService.enviarAutoCadastro(dados);
         if (!mounted) return;
         Navigator.pop(context);
 
         _showSucessoDialog();
+      } on DioException catch (e) {
+        if (!mounted) return;
+        Navigator.pop(context);
+
+        String mensagemErro = "Erro interno ao processar a inscrição.";
+
+        // Extrai a mensagem tratada enviada pelo Spring Boot { "mensagem": "..." }
+        if (e.response?.data != null) {
+          if (e.response?.data is Map && e.response?.data.containsKey('mensagem')) {
+            mensagemErro = e.response?.data['mensagem'];
+          } else if (e.response?.data is String) {
+            mensagemErro = e.response?.data;
+          }
+        }
+
+        _mostrarErro(mensagemErro);
       } catch (e) {
         if (!mounted) return;
         Navigator.pop(context);
 
-        _mostrarErro(e.toString().replaceAll("Exception: ", ""));
+        _mostrarErro("Erro inesperado ao realizar inscrição.");
       }
     }
   }
@@ -235,23 +241,27 @@ class _FormularioInscricaoScreenState extends State<FormularioInscricaoScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon) {
+  Widget _buildTextField(
+      TextEditingController controller, String label, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
         controller: controller,
-        readOnly: _camposBloqueados, // 🎯 Bloqueia o campo para edição se o aluno já estiver logado
+        readOnly: _camposBloqueados,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
           border: const OutlineInputBorder(),
           filled: _camposBloqueados,
-          fillColor: _camposBloqueados ? Colors.grey[100] : null, // Efeito visual cinza se bloqueado
+          fillColor: _camposBloqueados ? Colors.grey[100] : null,
         ),
-        keyboardType: (label == "CPF" || label == "WhatsApp" || label == "Contato de Emergência")
+        keyboardType: (label == "CPF" ||
+            label == "WhatsApp" ||
+            label == "Contato de Emergência")
             ? TextInputType.number
-            : (label == "E-mail") ? TextInputType.emailAddress : TextInputType.text,
-
+            : (label == "E-mail")
+            ? TextInputType.emailAddress
+            : TextInputType.text,
         validator: (value) {
           if (value == null || value.trim().isEmpty) {
             return 'O campo $label é obrigatório.';

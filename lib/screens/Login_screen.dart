@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:prosaude/core/services/auth_service.dart';
 import 'package:prosaude/core/services/session_manager.dart';
 import 'package:prosaude/screens/Dashboard_screen.dart';
-import 'package:prosaude/screens/TrocarSenha_screen.dart';
+
+import 'TrocarSenha_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +18,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isObscure = true;
   bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   void _handleLogin() async {
     int? uid;
@@ -40,8 +48,6 @@ class _LoginScreenState extends State<LoginScreen> {
               uid = sessao.id;
             });
           }
-
-          print("Sessão salva para o usuário: ${resultado.nome}");
 
           if (!mounted) return;
 
@@ -94,7 +100,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 30),
-
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -104,13 +109,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     prefixIcon: Icon(Icons.person),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty)
+                    if (value == null || value.trim().isEmpty) {
                       return "Informe o usuário";
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 15),
-
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _isObscure,
@@ -126,24 +131,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   validator: (value) {
-                    if (value == null) return "Senha muito curta";
+                    if (value == null || value.isEmpty) {
+                      return "Senha muito curta";
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 30),
-
                 SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _handleLogin,
-                    // Desativa o botão enquanto carrega
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text("ENTRAR"),
                   ),
                 ),
-
                 TextButton(
                   onPressed: () {},
                   child: const Text("Esqueceu a senha?"),

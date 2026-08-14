@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:prosaude/core/models/aluno/Aluno.dart';
+import 'package:prosaude/core/models/turma/Turma.dart';
 import 'package:prosaude/core/models/usuario/Usuario.dart';
 import 'package:prosaude/core/services/session_manager.dart';
 
@@ -24,6 +25,17 @@ class InscricaoService {
         },
       ),
     );
+  }
+
+  // 🎯 NOVO: Busca o objeto Turma para obter o limite de vagas
+  Future<Turma> buscarTurmaPorId(int turmaId) async {
+    try {
+      final response = await _dio.get("/turma/$turmaId");
+      return Turma.fromJson(response.data);
+    } on DioException catch (e) {
+      print("Erro ao buscar dados da turma: ${e.response?.data}");
+      throw Exception("Erro ao buscar informações da turma.");
+    }
   }
 
   Future<void> enviarAutoCadastro(Map<String, dynamic> dados) async {

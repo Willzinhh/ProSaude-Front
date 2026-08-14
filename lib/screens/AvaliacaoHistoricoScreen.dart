@@ -1,23 +1,20 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
-import 'package:prosaude/core/models/aluno/Aluno.dart';
 import '../core/models/avaliacao/Avaliacao.dart';
 import '../core/services/avaliacao_service.dart';
 import '../core/services/session_manager.dart';
-import 'AvaliacaoDetalhesScreen.dart'; // A tela que criamos antes
+import 'AvaliacaoDetalhesScreen.dart';
 
 class AvaliacaoHistoricoScreen extends StatefulWidget {
   final int id;
 
-  const AvaliacaoHistoricoScreen({super.key, required this.id });
+  const AvaliacaoHistoricoScreen({super.key, required this.id});
 
   @override
   State<AvaliacaoHistoricoScreen> createState() => _AvaliacaoHistoricoScreenState();
 }
 
 class _AvaliacaoHistoricoScreenState extends State<AvaliacaoHistoricoScreen> {
-  String _nome = "Carregando";
+  String _nome = "Carregando...";
   String _perfil = "";
   late Future<List<AvaliacaoModel>> _futureAvaliacoes;
 
@@ -25,21 +22,19 @@ class _AvaliacaoHistoricoScreenState extends State<AvaliacaoHistoricoScreen> {
   void initState() {
     super.initState();
     _carregarDadosUsuario();
-    // TODO: Ajuste o método de busca do seu service se ele tiver um nome diferente, ex: buscarPorAluno(id)
     _futureAvaliacoes = AvaliacaoService().buscarAvaliacoesPorAluno(widget.id);
   }
+
   Future<void> _carregarDadosUsuario() async {
     final sessao = await SessionManager.getSession();
-    if (sessao != null) {
+    if (sessao != null && mounted) {
       setState(() {
-
         _nome = sessao.nome ?? "Usuário";
         _perfil = sessao.perfil ?? "";
       });
     }
   }
 
-  // Função auxiliar para formatar a data sem precisar de pacotes externos
   String _formatarData(DateTime? data) {
     if (data == null) return "Sem data";
     final dia = data.day.toString().padLeft(2, '0');
@@ -104,7 +99,6 @@ class _AvaliacaoHistoricoScreenState extends State<AvaliacaoHistoricoScreen> {
             );
           }
 
-          // Garante que a lista está ordenada da data mais recente para a mais antiga
           avaliacoes.sort((a, b) {
             final dataA = a.dataAvaliacao ?? DateTime.fromMillisecondsSinceEpoch(0);
             final dataB = b.dataAvaliacao ?? DateTime.fromMillisecondsSinceEpoch(0);
@@ -128,9 +122,9 @@ class _AvaliacaoHistoricoScreenState extends State<AvaliacaoHistoricoScreen> {
                     backgroundColor: Colors.blue.shade100,
                     child: Icon(Icons.description, color: Colors.blue.shade900),
                   ),
-                  title: Text(
+                  title: const Text(
                     'Avaliação Física',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   subtitle: Padding(
                     padding: const EdgeInsets.only(top: 4.0),
@@ -156,7 +150,6 @@ class _AvaliacaoHistoricoScreenState extends State<AvaliacaoHistoricoScreen> {
                   ),
                   trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blue.shade900),
                   onTap: () {
-                    // Navega direto para a tela de visualização de detalhes que criamos antes
                     Navigator.push(
                       context,
                       MaterialPageRoute(

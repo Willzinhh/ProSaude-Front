@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:prosaude/core/models/turma/Turma.dart';
-import 'package:prosaude/core/services/turma_service.dart';
 import 'package:prosaude/core/services/inscricao_service.dart';
+import 'package:prosaude/core/services/turma_service.dart';
 import 'package:prosaude/screens/AvaliacaoHistoricoScreen.dart';
+import 'package:prosaude/widgets/widgets.dart';
 
 class TodasTurmasScreen extends StatefulWidget {
   const TodasTurmasScreen({super.key});
@@ -17,37 +18,18 @@ class _TodasTurmasScreenState extends State<TodasTurmasScreen> {
   List<Turma> _turmasFiltradas = [];
   bool _isLoading = true;
 
-  // Filtros dinâmicos
   late List<String> _opcoesSemestres;
   late String _semestreFiltroSelecionado;
 
-  // Mapa para controlar os alunos carregados de cada turma expandida
   final Map<int, List<dynamic>> _alunosPorTurma = {};
   final Map<int, bool> _carregandoAlunos = {};
 
   @override
   void initState() {
     super.initState();
-    _opcoesSemestres = _gerarListaSemestres();
-    _semestreFiltroSelecionado = _gerarSemestreAtual();
+    _opcoesSemestres = List.generate(20, (i) => "${DateTime.now().year + (i ~/ 2)}/${(i % 2) + 1}");
+    _semestreFiltroSelecionado = "${DateTime.now().year}/${DateTime.now().month <= 6 ? "1" : "2"}";
     _carregarTurmas();
-  }
-
-  List<String> _gerarListaSemestres() {
-    final List<String> semestres = [];
-    final int anoAtual = DateTime.now().year;
-    for (int i = 0; i <= 10; i++) {
-      int ano = anoAtual + i;
-      semestres.add("$ano/1");
-      semestres.add("$ano/2");
-    }
-    return semestres;
-  }
-
-  String _gerarSemestreAtual() {
-    final agora = DateTime.now();
-    final semestre = agora.month <= 6 ? "1" : "2";
-    return "${agora.year}/$semestre";
   }
 
   Future<void> _carregarTurmas() async {
@@ -66,21 +48,18 @@ class _TodasTurmasScreenState extends State<TodasTurmasScreen> {
   }
 
   void _aplicarFiltros() {
-    final queryNome = _searchController.text.toLowerCase();
+    final query = _searchController.text.toLowerCase();
     setState(() {
       _turmasFiltradas = _turmas.where((turma) {
-        final bateNome = turma.nome.toLowerCase().contains(queryNome);
-        final bateSemestre = _semestreFiltroSelecionado == "TODOS" ||
-            turma.semestre == _semestreFiltroSelecionado;
+        final bateNome = turma.nome.toLowerCase().contains(query);
+        final bateSemestre = _semestreFiltroSelecionado == "TODOS" || turma.semestre == _semestreFiltroSelecionado;
         return bateNome && bateSemestre;
       }).toList();
     });
   }
 
-  // 🎯 Carrega os alunos quando o coordenador expande a turma
   Future<void> _carregarInscritosDaTurma(int turmaId) async {
-    if (_alunosPorTurma.containsKey(turmaId)) return; // Já carregou antes
-
+    if (_alunosPorTurma.containsKey(turmaId)) return;
     setState(() => _carregandoAlunos[turmaId] = true);
     try {
       final alunos = await InscricaoService().listarInscritos(turmaId);
@@ -94,15 +73,22 @@ class _TodasTurmasScreenState extends State<TodasTurmasScreen> {
     }
   }
 
-  // 🎯 Deleta a inscrição do aluno diretamente
-  Future<void> _removerAluno(int turmaId, int alunoId, String nomeAluno) async {
+  Future<void> _removerAluno(int turmaId, dynamic aluno) async {
+    final int? alunoId = aluno.id as int?;
+    final String nomeAluno = aluno.nome?.toString() ?? "Aluno";
+
+    if (alunoId == null) return;
+
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Confirmar Remoção"),
         content: Text("Deseja realmente remover $nomeAluno desta turma?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancelar")),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancelar"),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: const Text("Remover", style: TextStyle(color: Colors.red)),
@@ -120,7 +106,7 @@ class _TodasTurmasScreenState extends State<TodasTurmasScreen> {
           _carregarInscritosDaTurma(turmaId);
         }
       } catch (e) {
-        _mostrarMensagem("Erro ao remover: $e", Colors.red);
+        _mostrarMensagem("Erro ao remover aluno: $e", Colors.red);
       }
     }
   }
@@ -128,53 +114,6 @@ class _TodasTurmasScreenState extends State<TodasTurmasScreen> {
   void _mostrarMensagem(String msg, Color cor) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(msg), backgroundColor: cor),
-    );
-  }
-
-  /// 🎯 COMPONENTE ISOLADO: Acessa os dados como OBJETO (dynamic obtido da classe Aluno)
-  Widget _buildItemAluno(dynamic aluno, int idTurma) {
-    // Acessando as propriedades diretamente por ponto (.) já que é uma classe e não um Map
-    final String nomeExibicao = aluno.nome?.toString() ?? 'Aluno sem nome';
-    final String telefoneExibicao = aluno.telefone?.toString() ?? 'Não informado';
-    final int? idDoAluno = aluno.id as int?;
-
-    return ListTile(
-      leading: const CircleAvatar(
-        radius: 14,
-        backgroundColor: Colors.teal,
-        child: Icon(Icons.person, size: 16, color: Colors.white),
-      ),
-      title: Text(
-          nomeExibicao,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)
-      ),
-      subtitle: Text("Tel: $telefoneExibicao", style: const TextStyle(fontSize: 11)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.assignment_ind, color: Colors.blue, size: 20),
-            tooltip: "Ver Avaliações",
-            onPressed: idDoAluno == null
-                ? null
-                : () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => AvaliacaoHistoricoScreen(id: idDoAluno),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-            tooltip: "Remover Aluno",
-            onPressed: idDoAluno == null
-                ? null
-                : () => _removerAluno(idTurma, idDoAluno, nomeExibicao),
-          ),
-        ],
-      ),
     );
   }
 
@@ -188,38 +127,19 @@ class _TodasTurmasScreenState extends State<TodasTurmasScreen> {
       ),
       body: Column(
         children: [
-          // Filtro por Nome
           Padding(
-            padding: const EdgeInsets.only(left: 12.0, right: 12.0, top: 12.0, bottom: 6.0),
-            child: TextField(
+            padding: const EdgeInsets.all(12.0),
+            child: SearchInputField(
               controller: _searchController,
+              label: "Buscar por nome da turma...",
               onChanged: (_) => _aplicarFiltros(),
-              decoration: InputDecoration(
-                labelText: "Buscar por nome da turma...",
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
             ),
           ),
-
-          const SizedBox(height: 15),
-
-          // Filtro Dropdown por Semestre
           Padding(
-            padding: const EdgeInsets.only(left: 12.0, right: 12.0, bottom: 12.0),
-            child: DropdownButtonFormField<String>(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: SemestreDropdown(
               value: _semestreFiltroSelecionado,
-              decoration: InputDecoration(
-                labelText: "Filtrar por Semestre Letivo",
-                prefixIcon: const Icon(Icons.filter_alt, color: Colors.teal),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              items: ["TODOS", ..._opcoesSemestres]
-                  .map((sem) => DropdownMenuItem(
-                value: sem,
-                child: Text(sem == "TODOS" ? "Todos os Semestres" : "Semestre $sem"),
-              ))
-                  .toList(),
+              opcoes: _opcoesSemestres,
               onChanged: (val) {
                 if (val != null) {
                   _semestreFiltroSelecionado = val;
@@ -228,8 +148,7 @@ class _TodasTurmasScreenState extends State<TodasTurmasScreen> {
               },
             ),
           ),
-
-          // Lista Principal de Turmas
+          const SizedBox(height: 10),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: Colors.teal))
@@ -250,9 +169,7 @@ class _TodasTurmasScreenState extends State<TodasTurmasScreen> {
                     subtitle: Text("Semestre: ${turma.semestre} | Prof: ${turma.bolsista_responsavel?.nome ?? 'Sem Prof'}"),
                     leading: const Icon(Icons.class_, color: Colors.teal),
                     onExpansionChanged: (expandido) {
-                      if (expandido) {
-                        _carregarInscritosDaTurma(idTurma);
-                      }
+                      if (expandido) _carregarInscritosDaTurma(idTurma);
                     },
                     children: [
                       if (_carregandoAlunos[idTurma] == true)
@@ -266,10 +183,16 @@ class _TodasTurmasScreenState extends State<TodasTurmasScreen> {
                           child: Text("Nenhum aluno inscrito nesta turma.", style: TextStyle(fontStyle: FontStyle.italic)),
                         )
                       else
-                        ..._alunosPorTurma[idTurma]!.map((aluno) {
-                          // Passa o objeto puro direto para o componente build
-                          return _buildItemAluno(aluno, idTurma);
-                        }).toList(),
+                        ..._alunosPorTurma[idTurma]!.map(
+                              (aluno) => AlunoListTile(
+                            aluno: aluno,
+                            onVerHistorico: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => AvaliacaoHistoricoScreen(id: aluno.id)),
+                            ),
+                            onRemover: () => _removerAluno(idTurma, aluno),
+                          ),
+                        ),
                     ],
                   ),
                 );

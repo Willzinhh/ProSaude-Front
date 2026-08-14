@@ -86,17 +86,27 @@ class TurmaService {
     return "$ano/$semestre";
   }
 
-  // 🎯 Busca apenas turmas abertas para inscrição no semestre informado
   Future<List<Turma>> carregarTurmasPorSemestre(String semestre) async {
     try {
       final semestreUrl = semestre.replaceAll('/', '-');
-
-      // 🎯 Use a sua instância global do Dio (aquela que tem o Interceptor do JWT)
       final response = await _dio.get("/turma/disponiveis/$semestreUrl");
 
-      return (response.data as List)
-          .map((item) => Turma.fromJson(item))
-          .toList();
+      // Caso o backend retorne uma lista direta:
+      if (response.data is List) {
+        return (response.data as List)
+            .map((item) => Turma.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+
+      // Caso o backend retorne um Map com uma chave contendo a lista:
+      if (response.data is Map<String, dynamic>) {
+        final List rawList = response.data['turmas'] ?? response.data['content'] ?? [];
+        return rawList
+            .map((item) => Turma.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+
+      return [];
     } catch (e) {
       print("🚨 Erro na requisição de turmas: $e");
       throw Exception("Erro ao carregar turmas");

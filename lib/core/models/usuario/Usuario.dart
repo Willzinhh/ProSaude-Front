@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:json_annotation/json_annotation.dart';
 
 part 'Usuario.g.dart';
@@ -9,7 +7,7 @@ class Usuario {
   final int? id;
   final String nome;
   final String email;
-  final String senha;
+  final String? senha;
   final String perfil;
   final String? telefone;
   final String? telefone_emergencia;

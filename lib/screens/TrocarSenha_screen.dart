@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:prosaude/core/services/equipe_service.dart'; // Supondo que o método esteja aqui
+import 'package:prosaude/core/services/equipe_service.dart';
 
 class TrocarSenhaScreen extends StatefulWidget {
   final int usuarioId;
@@ -15,6 +15,13 @@ class _TrocarSenhaScreenState extends State<TrocarSenhaScreen> {
   final _novaSenhaController = TextEditingController();
   final _confirmarController = TextEditingController();
   bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _novaSenhaController.dispose();
+    _confirmarController.dispose();
+    super.dispose();
+  }
 
   void _enviarNovaSenha() async {
     if (_formKey.currentState!.validate()) {
@@ -32,6 +39,7 @@ class _TrocarSenhaScreenState extends State<TrocarSenhaScreen> {
           );
         }
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Erro ao atualizar: $e"),
@@ -73,7 +81,8 @@ class _TrocarSenhaScreenState extends State<TrocarSenhaScreen> {
                   labelText: "Nova Senha",
                   border: OutlineInputBorder(),
                 ),
-                validator: (v) => v!.length < 6 ? "Mínimo 6 caracteres" : null,
+                validator: (v) =>
+                (v == null || v.length < 6) ? "Mínimo 6 caracteres" : null,
               ),
               const SizedBox(height: 15),
               TextFormField(
@@ -97,9 +106,9 @@ class _TrocarSenhaScreenState extends State<TrocarSenhaScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
-                          "ATUALIZAR E ENTRAR",
-                          style: TextStyle(color: Colors.white),
-                        ),
+                    "ATUALIZAR E ENTRAR",
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
             ],

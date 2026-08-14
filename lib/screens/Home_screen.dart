@@ -1,13 +1,13 @@
 import 'package:carousel_slider/carousel_slider.dart' as slider;
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart'; // 🎯 Importe o Dio para fazer a requisição direta
+import 'package:prosaude/core/models/turma/Turma.dart';
+import 'package:prosaude/core/services/inscricao_service.dart';
+import 'package:prosaude/core/services/session_manager.dart';
+import 'package:prosaude/core/services/turma_service.dart';
+import 'package:prosaude/core/utils/date_time_utils.dart';
 import 'package:prosaude/screens/FormularioInscricao_screen.dart';
-import 'package:prosaude/screens/Login_screen.dart';
-
-import '../core/models/turma/Turma.dart';
-import '../core/services/inscricao_service.dart';
-import '../core/services/session_manager.dart';
-import '../core/services/turma_service.dart';
+import '../widgets/common/day_badge.dart';
+import 'Login_screen.dart';
 
 class HomePage extends StatefulWidget {
   final bool veioDoDashboard;
@@ -20,7 +20,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future<List<Turma>> _futureTurmas;
-  final Dio _dio = Dio(BaseOptions(baseUrl: "http://sua-api-url:8080")); // 🎯 Ajuste para a URL do seu backend/Docker
+  final InscricaoService _inscricaoService = InscricaoService();
 
   @override
   void initState() {
@@ -40,7 +40,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // 🎯 Calcula dinamicamente o semestre atual (Ex: "2026/1" ou "2026/2")
   String _gerarSemestreAtual() {
     final agora = DateTime.now();
     final ano = agora.year;
@@ -48,14 +47,9 @@ class _HomePageState extends State<HomePage> {
     return "$ano/$semestre";
   }
 
-
-
-  final InscricaoService _inscricaoService = InscricaoService();
-
   void _executarInscricaoRapida(int? turmaId) async {
     if (turmaId == null) return;
 
-    // Mostra o loading na tela
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -66,27 +60,23 @@ class _HomePageState extends State<HomePage> {
       final session = await SessionManager.getSession();
 
       final dadosInscricao = {
-        "alunoId": session?.id, // Envia o ID numérico direto do celular
+        "alunoId": session?.id,
         "turmaId": turmaId,
-        "semestre": _gerarSemestreAtual(), // Ex: "2026/1"
+        "semestre": _gerarSemestreAtual(),
       };
 
-      // 🎯 Chama o método do seu serviço (ele já cuida do endpoint e do Token!)
       await _inscricaoService.enviarAutoCadastro(dadosInscricao);
 
-      Navigator.pop(context); // Fecha o loading
+      if (mounted) Navigator.pop(context);
 
       _exibirPopupFeedback(
         titulo: "Inscrição Confirmada!",
         mensagem: "Sua vaga foi garantida para o semestre ${_gerarSemestreAtual()} com sucesso.",
         isErro: false,
       );
-
     } catch (e) {
-      Navigator.pop(context); // Fecha o loading
+      if (mounted) Navigator.pop(context);
 
-      // Como o seu service já joga a mensagem limpa no throw Exception(mensagem)
-      // Nós apenas limpamos o texto "Exception: " caso ele apareça
       String msgErro = e.toString().replaceAll("Exception: ", "");
 
       _exibirPopupFeedback(
@@ -97,7 +87,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // 🎯 Janela de aviso amigável com base na resposta do Java
   void _exibirPopupFeedback({required String titulo, required String mensagem, required bool isErro}) {
     showDialog(
       context: context,
@@ -126,20 +115,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  List<String> diasAtivos(turma) {
-    final diasAtivos = <String>[];
-    if (turma.aulaSegunda == true) diasAtivos.add("SEG");
-    if (turma.aulaTerca == true) diasAtivos.add("TER");
-    if (turma.aulaQuarta == true) diasAtivos.add("QUA");
-    if (turma.aulaQuinta == true) diasAtivos.add("QUI");
-    if (turma.aulaSexta == true) diasAtivos.add("SEX");
-    if (turma.aulaSabado == true) diasAtivos.add("SÁB");
-    if (turma.aulaDomingo == true) diasAtivos.add("DOM");
-    return diasAtivos;
-  }
-
   void _abrirModalDetalhes(Turma turma) {
-    final diasAtivo = diasAtivos(turma);
+    final diasAtivos = DateTimeUtils.obterDiasAtivos(turma);
+    final horaInicio = DateTimeUtils.formatarHora(turma.horaInicio);
+    final horaFim = DateTimeUtils.formatarHora(turma.horaFim);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -155,19 +135,13 @@ class _HomePageState extends State<HomePage> {
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                children: diasAtivo.map((dia) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.teal.shade700.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      dia.substring(0, 3),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                  );
-                }).toList(),
+                children: diasAtivos
+                    .map((dia) => DayBadge(
+                  dia: dia,
+                  backgroundColor: Colors.teal.shade700,
+                  textColor: Colors.teal.shade900,
+                ))
+                    .toList(),
               ),
               const SizedBox(height: 15),
               Row(
@@ -175,7 +149,7 @@ class _HomePageState extends State<HomePage> {
                   const Icon(Icons.access_time, size: 18, color: Colors.teal),
                   const SizedBox(width: 8),
                   Text(
-                    "${formatarHora(turma.horaInicio)} até ${formatarHora(turma.horaFim)}",
+                    "$horaInicio até $horaFim",
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                 ],
@@ -194,13 +168,11 @@ class _HomePageState extends State<HomePage> {
           ElevatedButton(
             onPressed: () async {
               final token = await SessionManager.getToken();
-              Navigator.pop(context); // Fecha a modal de detalhes
+              Navigator.pop(context);
 
               if (token != null && token.isNotEmpty) {
-                // 🎯 SE ESTIVER LOGADO: Executa a inscrição rápida direto pelo back-end
                 _executarInscricaoRapida(turma.id);
               } else {
-                // SE FOR ANÔNIMO: Segue o fluxo normal perguntando se tem conta
                 _verificarUsuario(context, turma.id);
               }
             },
@@ -214,7 +186,13 @@ class _HomePageState extends State<HomePage> {
   List<Turma> _obterTurmasDeHoje(List<Turma> todas) {
     int diaNum = DateTime.now().weekday;
     Map<int, String> mapaDias = {
-      1: "SEGUNDA", 2: "TERCA", 3: "QUARTA", 4: "QUINTA", 5: "SEXTA", 6: "SABADO", 7: "DOMINGO",
+      1: "SEGUNDA",
+      2: "TERCA",
+      3: "QUARTA",
+      4: "QUINTA",
+      5: "SEXTA",
+      6: "SABADO",
+      7: "DOMINGO",
     };
     String hoje = mapaDias[diaNum] ?? "";
     return todas.where((t) {
@@ -266,7 +244,7 @@ class _HomePageState extends State<HomePage> {
       body: RefreshIndicator(
         onRefresh: () async {
           setState(() {
-            _futureTurmas = TurmaService().getTurmas();
+            _futureTurmas = TurmaService().carregarTurmasPorSemestre(_gerarSemestreAtual());
           });
         },
         child: FutureBuilder<List<Turma>>(
@@ -342,7 +320,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCarouselItem(Turma turma) {
-    final diasAtivo = diasAtivos(turma);
+    final diasAtivos = DateTimeUtils.obterDiasAtivos(turma);
+    final horaInicio = DateTimeUtils.formatarHora(turma.horaInicio);
+    final horaFim = DateTimeUtils.formatarHora(turma.horaFim);
+
     return InkWell(
       onTap: () => _abrirModalDetalhes(turma),
       child: Container(
@@ -369,19 +350,13 @@ class _HomePageState extends State<HomePage> {
                   const Spacer(),
                   Wrap(
                     spacing: 6,
-                    children: diasAtivo.map((dia) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          dia.substring(0, 3),
-                          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                      );
-                    }).toList(),
+                    children: diasAtivos
+                        .map((dia) => DayBadge(
+                      dia: dia,
+                      backgroundColor: Colors.white,
+                      textColor: Colors.white,
+                    ))
+                        .toList(),
                   ),
                 ],
               ),
@@ -392,7 +367,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 8),
               Text(
-                "${formatarHora(turma.horaInicio)} -- ${formatarHora(turma.horaFim)}",
+                "$horaInicio -- $horaFim",
                 style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ],
@@ -402,13 +377,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  String formatarHora(String? hora) {
-    if (hora == null || hora.isEmpty) return "--:--";
-    return hora.substring(0, 5);
-  }
-
   Widget _buildCardTurma(Turma turma) {
-    final diasAtivosCard = diasAtivos(turma);
+    final diasAtivos = DateTimeUtils.obterDiasAtivos(turma);
+    final horaInicio = DateTimeUtils.formatarHora(turma.horaInicio);
+    final horaFim = DateTimeUtils.formatarHora(turma.horaFim);
+
     return InkWell(
       onTap: () => _abrirModalDetalhes(turma),
       borderRadius: BorderRadius.circular(15),
@@ -422,19 +395,13 @@ class _HomePageState extends State<HomePage> {
             children: [
               Wrap(
                 spacing: 6,
-                children: diasAtivosCard.map((dia) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.teal.shade300.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      dia.substring(0, 3),
-                      style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
-                    ),
-                  );
-                }).toList(),
+                children: diasAtivos
+                    .map((dia) => DayBadge(
+                  dia: dia,
+                  backgroundColor: Colors.teal.shade300,
+                  textColor: Colors.black,
+                ))
+                    .toList(),
               ),
               const Spacer(),
               Padding(
@@ -448,14 +415,9 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "${formatarHora(turma.horaInicio)} -- ${formatarHora(turma.horaFim)}",
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                ],
+              Text(
+                "$horaInicio -- $horaFim",
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -466,9 +428,18 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildCardVazio() {
     DateTime hoje = DateTime.now();
-    List<String> diasPt = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"];
+    List<String> diasPt = [
+      "Segunda-feira",
+      "Terça-feira",
+      "Quarta-feira",
+      "Quinta-feira",
+      "Sexta-feira",
+      "Sábado",
+      "Domingo"
+    ];
     String nomeDia = diasPt[hoje.weekday - 1];
-    String dataFormatada = "${hoje.day.toString().padLeft(2, '0')}/${hoje.month.toString().padLeft(2, '0')}";
+    String dataFormatada =
+        "${hoje.day.toString().padLeft(2, '0')}/${hoje.month.toString().padLeft(2, '0')}";
 
     return Container(
       width: double.infinity,

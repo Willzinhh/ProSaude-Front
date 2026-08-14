@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/models/avaliacao/Avaliacao.dart';
-import 'GroupContainer.dart';
+import '../widgets/GroupContainer.dart';
 
 class AvaliacaoDetalhesScreen extends StatelessWidget {
   final String aluno;
@@ -13,8 +13,6 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
     required this.avaliacao,
     required this.perfilUsuario,
   });
-
-  // --- COMPONENTES AUXILIARES DE LEITURA (UI) ---
 
   Widget _buildDadoLinha({required String label, required String? valor}) {
     return Padding(
@@ -41,13 +39,12 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
     );
   }
 
-  // Novo widget para dar destaque visual aos parâmetros calculados importantes (IMC e RCQ)
   Widget _buildCardResultadoCalculado({
     required String titulo,
     required String valor,
     required String? classificacao,
   }) {
-    final bool Alerta = classificacao != null &&
+    final bool alerta = classificacao != null &&
         (classificacao.contains("Grade") ||
             classificacao.contains("Obesidade") ||
             classificacao.contains("Alto") ||
@@ -57,9 +54,9 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
-        color: Alerta ? Colors.amber.shade50 : Colors.green.shade50,
+        color: alerta ? Colors.amber.shade50 : Colors.green.shade50,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Alerta ? Colors.amber.shade300 : Colors.green.shade300),
+        border: Border.all(color: alerta ? Colors.amber.shade300 : Colors.green.shade300),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -77,7 +74,7 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Alerta ? Colors.amber.shade900 : Colors.green.shade900
+                    color: alerta ? Colors.amber.shade900 : Colors.green.shade900
                 ),
               ),
             ],
@@ -87,7 +84,7 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
             style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Alerta ? Colors.amber.shade900 : Colors.green.shade900
+                color: alerta ? Colors.amber.shade900 : Colors.green.shade900
             ),
           ),
         ],
@@ -125,10 +122,15 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
     );
   }
 
-  // --- RENDERIZADORES DAS ABAS DE LEITURA ---
-
   Widget _buildAnamneseTab() {
     final mapaSono = avaliacao.dadosSono ?? {};
+    final indisposicaoIndex = mapaSono['q9FaltaEntusiasmo'];
+    final labelsIndisposicao = ["Nenhuma", "Pequena", "Moderada", "Muita"];
+
+    String? textoIndisposicao;
+    if (indisposicaoIndex != null && indisposicaoIndex >= 0 && indisposicaoIndex < labelsIndisposicao.length) {
+      textoIndisposicao = "${labelsIndisposicao[indisposicaoIndex]} indisposição";
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -152,7 +154,7 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
           GroupContainer(
             title: 'Qualidade de Sono (Pittsburgh)',
             children: [
-              _buildDadoLinha(label: 'Horas médias de sono', valor: avaliacao.anaHsSono.toString()),
+              _buildDadoLinha(label: 'Horas médias de sono', valor: avaliacao.anaHsSono?.toString()),
               const SizedBox(height: 10),
               const Text("Frequência de problemas para dormir no último mês:", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
               const SizedBox(height: 8),
@@ -175,12 +177,7 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
               _buildDadoLinha(label: 'Medicamentos utilizados', valor: mapaSono['q7RemedioQuais']),
               _buildDadoFrequenciaSono(titulo: "8) Dificuldade de ficar acordado em atividades", valorIndex: mapaSono['q8FicarAcordadoAtividades']),
 
-              _buildDadoLinha(
-                  label: '9) Falta de entusiasmo',
-                  valor: mapaSono['q9FaltaEntusiasmo'] != null
-                  ? ["Nenhuma", "Pequena", "Moderada", "Muita"][mapaSono['q9FaltaEntusiasmo']] + " indisposição"
-                  : null
-              ),
+              _buildDadoLinha(label: '9) Falta de entusiasmo', valor: textoIndisposicao),
               _buildDadoLinha(label: 'Comentários Q9', valor: mapaSono['q9Comentarios']),
               const Divider(),
               _buildDadoLinha(label: '10) Costuma cochilar?', valor: mapaSono['q10Cochila'] == true ? "Sim" : "Não"),
@@ -203,7 +200,6 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // AJUSTADO: Destaque dos Resultados Calculados pelo Back-end no topo
           GroupContainer(
             title: 'Parâmetros Calculados',
             children: [
@@ -223,7 +219,7 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
             title: 'Massa e Estatura (Dados Coletados)',
             children: [
               _buildDadoLinha(label: 'Massa Corporal', valor: avaliacao.antPeso != null ? "${avaliacao.antPeso} kg" : null),
-              _buildDadoLinha(label: 'Estatura', valor: avaliacao.antAltura != null ? "${avaliacao.antAltura} m" : null),
+              _buildDadoLinha(label: 'Estatura', valor: avaliacao.antAltura != null ? "${avaliacao.antAltura} cm" : null),
             ],
           ),
           GroupContainer(
@@ -286,7 +282,7 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
                       ],
                     ),
                   );
-                }).toList()
+                })
               ]
             ],
           ),
@@ -380,6 +376,9 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final data = avaliacao.dataAvaliacao;
+    final dataFormatada = data != null ? "${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}" : "Sem data";
+
     return DefaultTabController(
       length: 5,
       child: Scaffold(
@@ -394,7 +393,7 @@ class AvaliacaoDetalhesScreen extends StatelessWidget {
                 style: const TextStyle(fontSize: 18),
               ),
               Text(
-                'Data da Ficha: ${avaliacao.dataAvaliacao?.day}/${avaliacao.dataAvaliacao?.month}/${avaliacao.dataAvaliacao?.year}',
+                'Data da Ficha: $dataFormatada',
                 style: const TextStyle(fontSize: 12, color: Colors.white70),
               )
             ],
