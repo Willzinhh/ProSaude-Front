@@ -4,7 +4,7 @@ import '../models/usuario/Usuario.dart';
 import 'session_manager.dart';
 
 class EquipeService {
-  final Dio _dio = Dio(BaseOptions(baseUrl: "http://prosaude-back.onrender.com/ProSaude"));
+  final Dio _dio = Dio(BaseOptions(baseUrl: "https://prosaude-back.onrender.com/ProSaude"));
 
   EquipeService() {
     _dio.interceptors.add(

@@ -6,7 +6,7 @@ import '../models/login/LoginResponse.dart';
 class AuthService {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: "http://prosaude-back.onrender.com/ProSaude",
+      baseUrl: "https://prosaude-back.onrender.com/ProSaude",
       connectTimeout: const Duration(
         seconds: 5,
       ),
