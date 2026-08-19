@@ -5,13 +5,7 @@ import '../models/chamada/ChamadaDTO.dart';
 class ChamadaService {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: "https://prosaude-back.onrender.com/ProSaude/chamadas",
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    ),
+      baseUrl: "https://prosaude-back.onrender.com/ProSaude/chamadas"),
   );
 
   ChamadaService() {
