@@ -19,9 +19,7 @@ class ChamadaService {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final token = await SessionManager.getToken();
-          if (token != null && token.isNotEmpty) {
-            options.headers["Authorization"] = "Bearer $token";
-          }
+          options.headers["Authorization"] = "Bearer $token";
           return handler.next(options);
         },
       ),
