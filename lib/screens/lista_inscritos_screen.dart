@@ -3,7 +3,10 @@ import 'package:prosaude/core/models/aluno/Aluno.dart';
 import 'package:prosaude/core/models/turma/Turma.dart';
 import 'package:prosaude/core/services/inscricao_service.dart';
 import '../widgets/cards/inscritos_card_item.dart';
+import '../widgets/dialogs/iniciar_chamada_dialog.dart';
+import '../widgets/inputs/search_input_field.dart';
 import 'AvaliacaoFormScreen.dart';
+import 'chamada_screen.dart';
 
 class ListaInscritosScreen extends StatefulWidget {
   final int turmaId;
@@ -48,7 +51,6 @@ class _ListaInscritosScreenState extends State<ListaInscritosScreen> {
     });
 
     try {
-      // Executa as duas requisições ao mesmo tempo
       final resultados = await Future.wait([
         _inscricaoService.buscarTurmaPorId(widget.turmaId),
         _inscricaoService.listarInscritos(widget.turmaId),
@@ -77,12 +79,35 @@ class _ListaInscritosScreenState extends State<ListaInscritosScreen> {
     });
   }
 
+  void _abrirModalChamada() {
+    if (_turma == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => IniciarChamadaDialog(
+        onConfirmar: (data) {
+          final limiteVagas = _turma?.vagas ?? 0;
+          final comVaga = _inscritosOriginal.take(limiteVagas).toList();
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChamadaScreen(
+                turma: _turma!,
+                data: data,
+                // Passa os alunos confirmados com vaga para a chamada
+                alunosComVaga: comVaga,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Pega o limite de vagas retornado do backend através do objeto Turma
     final int limiteVagas = _turma?.vagas ?? 0;
-
-    // Separa os alunos que estão dentro do limite de vagas e os excedentes
     final List<Aluno> comVaga = _inscritosFiltrados.take(limiteVagas).toList();
     final List<Aluno> filaEspera = _inscritosFiltrados.skip(limiteVagas).toList();
 
@@ -91,6 +116,14 @@ class _ListaInscritosScreenState extends State<ListaInscritosScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text("Inscritos: ${widget.nomeTurma}"),
+          actions: [
+            if (!_isLoading && _turma != null)
+              IconButton(
+                icon: const Icon(Icons.how_to_reg, color: Colors.tealAccent),
+                tooltip: "Fazer Chamada",
+                onPressed: _abrirModalChamada,
+              ),
+          ],
           bottom: TabBar(
             tabs: [
               Tab(
@@ -106,28 +139,9 @@ class _ListaInscritosScreenState extends State<ListaInscritosScreen> {
         ),
         body: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: TextField(
-                controller: _searchController,
-                onChanged: _filtrar,
-                decoration: InputDecoration(
-                  labelText: "Buscar aluno por nome...",
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      _searchController.clear();
-                      _filtrar("");
-                    },
-                  )
-                      : null,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
+            SearchInputField(
+              controller: _searchController,
+              onChanged: _filtrar, label: '',
             ),
             Expanded(
               child: _isLoading
