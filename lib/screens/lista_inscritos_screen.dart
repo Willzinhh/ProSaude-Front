@@ -7,6 +7,7 @@ import '../widgets/dialogs/iniciar_chamada_dialog.dart';
 import '../widgets/inputs/search_input_field.dart';
 import 'AvaliacaoFormScreen.dart';
 import 'chamada_screen.dart';
+import 'historico_chamadas_screen.dart';
 
 class ListaInscritosScreen extends StatefulWidget {
   final int turmaId;
@@ -117,12 +118,25 @@ class _ListaInscritosScreenState extends State<ListaInscritosScreen> {
         appBar: AppBar(
           title: Text("Inscritos: ${widget.nomeTurma}"),
           actions: [
-            if (!_isLoading && _turma != null)
+            if (!_isLoading && _turma != null) ...[
+              IconButton(
+                icon: const Icon(Icons.history),
+                tooltip: "Histórico de Chamadas",
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HistoricoChamadasScreen(turma: _turma!),
+                    ),
+                  );
+                },
+              ),
               IconButton(
                 icon: const Icon(Icons.how_to_reg, color: Colors.tealAccent),
-                tooltip: "Fazer Chamada",
+                tooltip: "Nova Chamada",
                 onPressed: _abrirModalChamada,
               ),
+            ]
           ],
           bottom: TabBar(
             tabs: [
