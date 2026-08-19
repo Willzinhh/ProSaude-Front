@@ -3,7 +3,7 @@ import 'package:prosaude/core/services/session_manager.dart';
 import '../models/chamada/ChamadaDTO.dart';
 
 class ChamadaService {
-  // Mantém a MESMA baseUrl usada no TurmaService
+  // 1. Usar a mesma baseUrl do TurmaService
   final Dio _dio = Dio(
     BaseOptions(
       baseUrl: "https://prosaude-back.onrender.com/ProSaude",
@@ -17,9 +17,14 @@ class ChamadaService {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final token = await SessionManager.getToken();
+
           if (token != null && token.isNotEmpty) {
+            // Garante que o header é adicionado
             options.headers["Authorization"] = "Bearer $token";
+          } else {
+            print("⚠️ AVISO: Token retornado pelo SessionManager está nulo ou vazio!");
           }
+
           return handler.next(options);
         },
       ),
@@ -29,6 +34,7 @@ class ChamadaService {
   // GET: Buscar histórico de chamadas de uma turma
   Future<List<ChamadaDto>> listarPorTurma(int turmaId) async {
     try {
+      // 2. Usar o caminho completo da rota
       final response = await _dio.get('/chamadas/turma/$turmaId');
 
       if (response.statusCode == 200) {
@@ -46,6 +52,7 @@ class ChamadaService {
   // POST: Registrar nova chamada
   Future<ChamadaDto> salvarChamada(ChamadaDto dto) async {
     try {
+      // 2. Usar '/chamadas' em vez de ''
       final response = await _dio.post(
         '/chamadas',
         data: dto.toJson(),
@@ -65,6 +72,7 @@ class ChamadaService {
   // PUT: Editar chamada existente
   Future<void> atualizarChamada(int chamadaId, ChamadaDto dto) async {
     try {
+      // 2. Usar '/chamadas/$chamadaId'
       final response = await _dio.put(
         '/chamadas/$chamadaId',
         data: dto.toJson(),
