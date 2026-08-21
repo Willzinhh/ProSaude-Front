@@ -44,8 +44,21 @@ class _HistoricoChamadasScreenState extends State<HistoricoChamadasScreen> {
         _inscricaoService.listarInscritos(widget.turma.id!),
       ]);
 
-      final chamadas = resultados[0] as List<ChamadaDto>;
-      final inscritos = resultados[1] as List<Aluno>;
+      // Trata a lista de chamadas com tipagem dinâmica
+      final List<ChamadaDto> chamadas = (resultados[0] as List)
+          .map((e) => e is ChamadaDto ? e : ChamadaDto.fromJson(e))
+          .toList();
+
+      // Se o serviço de inscrição retornar objetos 'Inscricao' contendo 'aluno'
+      final rawInscritos = resultados[1] as List;
+      final List<Aluno> inscritos = rawInscritos.map((e) {
+        if (e is Aluno) return e;
+        if (e is Map<String, dynamic> && e.containsKey('aluno')) {
+          return Aluno.fromJson(e['aluno']);
+        }
+        return Aluno.fromJson(e);
+      }).toList();
+
       final limiteVagas = widget.turma.vagas ?? 0;
 
       setState(() {
@@ -53,7 +66,9 @@ class _HistoricoChamadasScreenState extends State<HistoricoChamadasScreen> {
         _alunosComVaga = inscritos.take(limiteVagas).toList();
         _isLoading = false;
       });
-    } catch (e) {
+    } catch (e, stack) {
+      print('Erro no histórico: $e');
+      print(stack); // Imprime a linha exata no Console do Flutter para inspeção
       setState(() {
         _erroMensagem = e.toString().replaceAll("Exception: ", "");
         _isLoading = false;
