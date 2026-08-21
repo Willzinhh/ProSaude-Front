@@ -50,6 +50,21 @@ class _HomePageState extends State<HomePage> {
   void _executarInscricaoRapida(int? turmaId) async {
     if (turmaId == null) return;
 
+    final session = await SessionManager.getSession();
+
+    // FILTRO FRONT-END: Bloqueia perfis de Bolsista e Coordenador
+    final perfil = session?.perfil?.toUpperCase() ?? session?.perfil?.toUpperCase() ?? '';
+    if (perfil == 'BOLSISTA' || perfil == 'COORDENADOR') {
+      _exibirPopupFeedback(
+        titulo: "Inscrição Não Permitida",
+        mensagem: "Contas de Bolsista e Coordenador não podem se inscrever em turmas. Por favor, utilize uma conta de Aluno.",
+        isErro: true,
+      );
+      return;
+    }
+
+    if (!mounted) return;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -57,8 +72,6 @@ class _HomePageState extends State<HomePage> {
     );
 
     try {
-      final session = await SessionManager.getSession();
-
       final dadosInscricao = {
         "alunoId": session?.id,
         "turmaId": turmaId,
