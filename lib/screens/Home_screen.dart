@@ -53,8 +53,7 @@ class _HomePageState extends State<HomePage> {
     final session = await SessionManager.getSession();
 
     // FILTRO FRONT-END: Bloqueia perfis de Bolsista e Coordenador
-    final perfil = session?.perfil?.toUpperCase() ?? session?.perfil?.toUpperCase() ?? '';
-    if (perfil == 'BOLSISTA' || perfil == 'COORDENADOR') {
+    if (session?.perfil == 'BOLSISTA' || session?.perfil == 'COORDENADOR') {
       _exibirPopupFeedback(
         titulo: "Inscrição Não Permitida",
         mensagem: "Contas de Bolsista e Coordenador não podem se inscrever em turmas. Por favor, utilize uma conta de Aluno.",
