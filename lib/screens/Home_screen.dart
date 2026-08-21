@@ -61,41 +61,42 @@ class _HomePageState extends State<HomePage> {
       );
       return;
     }
-
     if (!mounted) return;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: Colors.teal)),
-    );
-
-    try {
-      final dadosInscricao = {
-        "alunoId": session?.id,
-        "turmaId": turmaId,
-        "semestre": _gerarSemestreAtual(),
-      };
-
-      await _inscricaoService.enviarAutoCadastro(dadosInscricao);
-
-      if (mounted) Navigator.pop(context);
-
-      _exibirPopupFeedback(
-        titulo: "Inscrição Confirmada!",
-        mensagem: "Sua vaga foi garantida para o semestre ${_gerarSemestreAtual()} com sucesso.",
-        isErro: false,
+    else {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) =>
+        const Center(child: CircularProgressIndicator(color: Colors.teal)),
       );
-    } catch (e) {
-      if (mounted) Navigator.pop(context);
 
-      String msgErro = e.toString().replaceAll("Exception: ", "");
+      try {
+        final dadosInscricao = {
+          "alunoId": session?.id,
+          "turmaId": turmaId,
+          "semestre": _gerarSemestreAtual(),
+        };
 
-      _exibirPopupFeedback(
-        titulo: "Inscrição Recusada",
-        mensagem: msgErro,
-        isErro: true,
-      );
+        await _inscricaoService.enviarAutoCadastro(dadosInscricao);
+
+        if (mounted) Navigator.pop(context);
+
+        _exibirPopupFeedback(
+          titulo: "Inscrição Confirmada!",
+          mensagem: "Sua vaga foi garantida para o semestre ${_gerarSemestreAtual()} com sucesso.",
+          isErro: false,
+        );
+      } catch (e) {
+        if (mounted) Navigator.pop(context);
+
+        String msgErro = e.toString().replaceAll("Exception: ", "");
+
+        _exibirPopupFeedback(
+          titulo: "Inscrição Recusada",
+          mensagem: msgErro,
+          isErro: true,
+        );
+      }
     }
   }
 
