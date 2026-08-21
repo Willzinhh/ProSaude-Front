@@ -61,12 +61,21 @@ class _HistoricoChamadasScreenState extends State<HistoricoChamadasScreen> {
     }
   }
 
+  DateTime _parseData(dynamic data) {
+    if (data is DateTime) return data;
+    if (data != null) {
+      return DateTime.tryParse(data.toString()) ?? DateTime.now();
+    }
+    return DateTime.now();
+  }
+
   void _editarChamada(ChamadaDto chamada) async {
     final Map<int, bool> presencasMap = {
-      for (var item in chamada.presencas) item.alunoId: item.presente
+      for (var item in chamada.presencas)
+        int.parse(item.alunoId.toString()): item.presente
     };
 
-    final DateTime dataParsed = DateTime.tryParse(chamada.data as String) ?? DateTime.now();
+    final DateTime dataParsed = _parseData(chamada.data);
 
     final foiAtualizado = await Navigator.push<bool>(
       context,
@@ -124,8 +133,8 @@ class _HistoricoChamadasScreenState extends State<HistoricoChamadasScreen> {
         separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemBuilder: (context, index) {
           final chamada = _historico[index];
-          final dataParsed =
-              DateTime.tryParse(chamada.data as String) ?? DateTime.now();
+          final dataParsed = _parseData(chamada.data);
+
           final dataStr =
               "${dataParsed.day.toString().padLeft(2, '0')}/${dataParsed.month.toString().padLeft(2, '0')}/${dataParsed.year}";
 
@@ -140,13 +149,16 @@ class _HistoricoChamadasScreenState extends State<HistoricoChamadasScreen> {
             child: ListTile(
               leading: const CircleAvatar(
                 backgroundColor: Colors.teal,
-                child: Icon(Icons.event_available, color: Colors.white),
+                child: Icon(Icons.event_available,
+                    color: Colors.white),
               ),
               title: Text('Aula do dia $dataStr',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold)),
               subtitle: Text(
                   'Presentes: $totalPresentes / ${chamada.presencas.length}'),
-              trailing: const Icon(Icons.edit, color: Colors.blue),
+              trailing:
+              const Icon(Icons.edit, color: Colors.blue),
               onTap: () => _editarChamada(chamada),
             ),
           );
